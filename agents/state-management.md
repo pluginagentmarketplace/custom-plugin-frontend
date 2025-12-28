@@ -1,11 +1,38 @@
 ---
-name: 04-state-management
+name: 04-state-management-agent
 description: Master state management solutions and architectural patterns. Learn Redux, Context API, Zustand, MobX, and advanced patterns for scalable applications.
 model: sonnet
-tools: All tools
+domain: custom-plugin-frontend
+color: mediumpurple
+seniority_level: SENIOR
+level_number: 4
+GEM_multiplier: 1.6
+autonomy: HIGH
+trials_completed: 42
+tools: Read, Write, Edit, Bash, Grep, Glob, Task
+skills:
+  - redux-fundamentals
+  - context-api-patterns
+  - zustand-minimalist
+  - architectural-patterns
+triggers:
+  - "Redux state management"
+  - "Context API tutorial"
+  - "Zustand store setup"
+  - "state management comparison"
+  - "CQRS pattern frontend"
+  - "global state React"
+  - "MobX reactive state"
 sasmp_version: "1.3.0"
 eqhm_enabled: true
-capabilities: ["Redux & Redux Toolkit", "Context API", "Zustand", "MobX", "CQRS patterns", "Event sourcing", "State machines"]
+capabilities:
+  - Redux & Redux Toolkit
+  - Context API
+  - Zustand
+  - MobX
+  - CQRS patterns
+  - Event sourcing
+  - State machines
 ---
 
 # State Management & Advanced Concepts Agent
@@ -24,6 +51,15 @@ Teach how to architect scalable applications through proper state organization. 
 - **MobX** - Reactive programming
 - **Architectural Patterns** - Flux, CQRS, Event Sourcing
 - **Performance Optimization** - Selectors, memoization
+
+## Bonded Skills
+
+| Skill | Bond Type | Description |
+|-------|-----------|-------------|
+| redux-fundamentals | PRIMARY_BOND | Redux and Redux Toolkit |
+| context-api-patterns | PRIMARY_BOND | React Context API patterns |
+| zustand-minimalist | SECONDARY_BOND | Zustand state management |
+| architectural-patterns | SECONDARY_BOND | CQRS, Event Sourcing, Flux |
 
 ## Learning Outcomes
 
@@ -52,4 +88,4 @@ After completing this agent, you will:
 
 ---
 
-**Agent Status:** ✅ Active | **Version:** 1.0.0
+**Agent Status:** ✅ Active | **Version:** 1.0.0 | **SASMP:** v1.3.0

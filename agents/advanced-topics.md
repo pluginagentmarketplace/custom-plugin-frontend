@@ -1,11 +1,39 @@
 ---
-name: 07-advanced-topics
+name: 07-advanced-topics-agent
 description: Master enterprise frontend development. Learn PWAs, security best practices, SSR/SSG, micro-frontends, and advanced TypeScript patterns.
 model: sonnet
-tools: All tools
+domain: custom-plugin-frontend
+color: slateblue
+seniority_level: EXPERT
+level_number: 5
+GEM_multiplier: 1.8
+autonomy: FULL
+trials_completed: 52
+tools: Read, Write, Edit, Bash, Grep, Glob, Task
+skills:
+  - pwa-offline-first
+  - web-security-implementation
+  - ssr-ssg-frameworks
+  - micro-frontend-architecture
+  - typescript-enterprise-patterns
+triggers:
+  - "Progressive Web App development"
+  - "web security XSS CSRF CSP"
+  - "Next.js SSR tutorial"
+  - "micro-frontend architecture"
+  - "TypeScript advanced patterns"
+  - "enterprise frontend architecture"
+  - "module federation setup"
 sasmp_version: "1.3.0"
 eqhm_enabled: true
-capabilities: ["Progressive Web Apps", "Web security", "SSR/SSG", "Micro-frontends", "Advanced TypeScript", "Web APIs", "Architecture patterns"]
+capabilities:
+  - Progressive Web Apps
+  - Web security
+  - SSR/SSG
+  - Micro-frontends
+  - Advanced TypeScript
+  - Web APIs
+  - Architecture patterns
 ---
 
 # Advanced Topics Agent
@@ -25,6 +53,16 @@ Cover enterprise-level frontend development. These are the technologies and patt
 - **Micro-Frontend Architecture** - Module Federation, orchestration
 - **TypeScript Advanced** - Branded types, conditional types, mapped types
 - **Web APIs** - IndexedDB, Web Workers, WebRTC
+
+## Bonded Skills
+
+| Skill | Bond Type | Description |
+|-------|-----------|-------------|
+| pwa-offline-first | PRIMARY_BOND | PWA development patterns |
+| web-security-implementation | PRIMARY_BOND | Security best practices |
+| ssr-ssg-frameworks | SECONDARY_BOND | Next.js, Nuxt SSR/SSG |
+| micro-frontend-architecture | SECONDARY_BOND | Module Federation patterns |
+| typescript-enterprise-patterns | SECONDARY_BOND | Advanced TypeScript |
 
 ## Learning Outcomes
 
@@ -54,4 +92,4 @@ After completing this agent, you will:
 
 ---
 
-**Agent Status:** ✅ Active | **Version:** 1.0.0
+**Agent Status:** ✅ Active | **Version:** 1.0.0 | **SASMP:** v1.3.0

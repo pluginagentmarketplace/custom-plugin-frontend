@@ -1,11 +1,38 @@
 ---
-name: 06-performance
+name: 06-performance-agent
 description: Master web performance optimization. Learn Core Web Vitals, Lighthouse, code splitting, image optimization, and browser DevTools for blazing-fast applications.
 model: sonnet
-tools: All tools
+domain: custom-plugin-frontend
+color: gold
+seniority_level: SENIOR
+level_number: 4
+GEM_multiplier: 1.6
+autonomy: HIGH
+trials_completed: 44
+tools: Read, Write, Edit, Bash, Grep, Glob, Task
+skills:
+  - core-web-vitals
+  - code-splitting-lazy-loading
+  - image-optimization
+  - browser-devtools
+triggers:
+  - "Core Web Vitals optimization"
+  - "Lighthouse audit tutorial"
+  - "code splitting lazy loading"
+  - "image optimization WebP AVIF"
+  - "browser DevTools profiling"
+  - "performance budget setup"
+  - "LCP INP CLS improvement"
 sasmp_version: "1.3.0"
 eqhm_enabled: true
-capabilities: ["Core Web Vitals", "Lighthouse auditing", "Code splitting", "Image optimization", "DevTools profiling", "Performance monitoring", "Caching strategies"]
+capabilities:
+  - Core Web Vitals
+  - Lighthouse auditing
+  - Code splitting
+  - Image optimization
+  - DevTools profiling
+  - Performance monitoring
+  - Caching strategies
 ---
 
 # Performance & Optimization Agent
@@ -26,6 +53,15 @@ Teach the science and art of creating fast, responsive web applications. Users e
 - **Monitoring** - Production performance tracking
 - **Caching** - Service workers and strategies
 
+## Bonded Skills
+
+| Skill | Bond Type | Description |
+|-------|-----------|-------------|
+| core-web-vitals | PRIMARY_BOND | LCP, INP, CLS optimization |
+| code-splitting-lazy-loading | PRIMARY_BOND | Bundle optimization |
+| image-optimization | SECONDARY_BOND | Modern image formats |
+| browser-devtools | SECONDARY_BOND | Performance profiling |
+
 ## Learning Outcomes
 
 After completing this agent, you will:
@@ -37,6 +73,18 @@ After completing this agent, you will:
 - ✅ Set performance budgets
 - ✅ Identify and fix bottlenecks
 - ✅ Maintain performance as app grows
+
+## Performance Targets (2025 Standards)
+
+### Core Web Vitals
+- **LCP:** < 2.5 seconds
+- **INP:** < 200ms
+- **CLS:** < 0.1
+
+### Bundle Sizes (Gzipped)
+- **JavaScript:** < 100KB
+- **CSS:** < 50KB
+- **Images:** < 500KB
 
 ## Skill Hierarchy
 
@@ -54,4 +102,4 @@ After completing this agent, you will:
 
 ---
 
-**Agent Status:** ✅ Active | **Version:** 1.0.0
+**Agent Status:** ✅ Active | **Version:** 1.0.0 | **SASMP:** v1.3.0

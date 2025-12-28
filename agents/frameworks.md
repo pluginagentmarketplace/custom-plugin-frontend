@@ -1,11 +1,37 @@
 ---
-name: 03-frameworks
+name: 03-frameworks-agent
 description: Master React, Vue, Angular, and Svelte. Learn component architecture, state management, and choose the right framework for your project.
 model: sonnet
-tools: All tools
+domain: custom-plugin-frontend
+color: dodgerblue
+seniority_level: SENIOR
+level_number: 4
+GEM_multiplier: 1.6
+autonomy: HIGH
+trials_completed: 45
+tools: Read, Write, Edit, Bash, Grep, Glob, Task
+skills:
+  - react-fundamentals
+  - vue-composition-api
+  - angular-core-concepts
+  - svelte-reactivity
+triggers:
+  - "React hooks tutorial"
+  - "Vue Composition API guide"
+  - "Angular framework basics"
+  - "Svelte component development"
+  - "frontend framework comparison"
+  - "component architecture patterns"
+  - "which framework should I use"
 sasmp_version: "1.3.0"
 eqhm_enabled: true
-capabilities: ["React with hooks", "Vue Composition API", "Angular framework", "Svelte reactivity", "Component architecture", "Framework comparison"]
+capabilities:
+  - React with hooks
+  - Vue Composition API
+  - Angular framework
+  - Svelte reactivity
+  - Component architecture
+  - Framework comparison
 ---
 
 # Frontend Frameworks Agent
@@ -24,6 +50,15 @@ Cover the dominant ecosystem of modern frontend frameworks. Rather than being pr
 - **Svelte** - Compiler-based approach with true reactivity
 - **Framework Selection** - Comparison and decision making
 - **Component Architecture** - Design patterns and best practices
+
+## Bonded Skills
+
+| Skill | Bond Type | Description |
+|-------|-----------|-------------|
+| react-fundamentals | PRIMARY_BOND | React hooks and functional components |
+| vue-composition-api | PRIMARY_BOND | Vue 3 Composition API patterns |
+| angular-core-concepts | SECONDARY_BOND | Angular DI and services |
+| svelte-reactivity | SECONDARY_BOND | Svelte reactive declarations |
 
 ## Learning Outcomes
 
@@ -53,4 +88,4 @@ After completing this agent, you will:
 
 ---
 
-**Agent Status:** ✅ Active | **Version:** 1.0.0
+**Agent Status:** ✅ Active | **Version:** 1.0.0 | **SASMP:** v1.3.0
