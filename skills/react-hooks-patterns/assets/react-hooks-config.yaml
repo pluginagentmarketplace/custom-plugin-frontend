@@ -1,0 +1,337 @@
+# React Hooks Patterns Configuration
+# Modern React development with hooks
+
+built_in_hooks:
+  useState:
+    description: "State management in functional components"
+    syntax: |
+      const [count, setCount] = useState(0);
+      const [user, setUser] = useState<User | null>(null);
+
+      // With initializer function (lazy initialization)
+      const [data, setData] = useState(() => computeExpensiveValue());
+
+    patterns:
+      object_state: |
+        const [form, setForm] = useState({ name: '', email: '' });
+
+        // Update single field
+        setForm(prev => ({ ...prev, name: 'John' }));
+
+      array_state: |
+        const [items, setItems] = useState<Item[]>([]);
+
+        // Add item
+        setItems(prev => [...prev, newItem]);
+
+        // Remove item
+        setItems(prev => prev.filter(item => item.id !== id));
+
+        // Update item
+        setItems(prev => prev.map(item =>
+          item.id === id ? { ...item, ...updates } : item
+        ));
+
+  useEffect:
+    description: "Side effects and lifecycle management"
+    patterns:
+      mount_only: |
+        useEffect(() => {
+          console.log('Component mounted');
+          return () => console.log('Component unmounted');
+        }, []);
+
+      dependency_based: |
+        useEffect(() => {
+          fetchUser(userId);
+        }, [userId]);
+
+      cleanup: |
+        useEffect(() => {
+          const subscription = api.subscribe(handleData);
+          return () => subscription.unsubscribe();
+        }, []);
+
+      async_pattern: |
+        useEffect(() => {
+          let cancelled = false;
+
+          async function fetchData() {
+            const result = await api.getData();
+            if (!cancelled) {
+              setData(result);
+            }
+          }
+
+          fetchData();
+          return () => { cancelled = true; };
+        }, []);
+
+  useContext:
+    description: "Consume context values"
+    pattern: |
+      const ThemeContext = createContext<Theme>('light');
+
+      function App() {
+        return (
+          <ThemeContext.Provider value="dark">
+            <ThemedButton />
+          </ThemeContext.Provider>
+        );
+      }
+
+      function ThemedButton() {
+        const theme = useContext(ThemeContext);
+        return <button className={theme}>Click</button>;
+      }
+
+  useReducer:
+    description: "Complex state with reducer pattern"
+    pattern: |
+      type Action =
+        | { type: 'increment' }
+        | { type: 'decrement' }
+        | { type: 'reset'; payload: number };
+
+      function reducer(state: number, action: Action): number {
+        switch (action.type) {
+          case 'increment': return state + 1;
+          case 'decrement': return state - 1;
+          case 'reset': return action.payload;
+        }
+      }
+
+      function Counter() {
+        const [count, dispatch] = useReducer(reducer, 0);
+
+        return (
+          <>
+            <span>{count}</span>
+            <button onClick={() => dispatch({ type: 'increment' })}>+</button>
+            <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
+          </>
+        );
+      }
+
+performance_hooks:
+  useCallback:
+    description: "Memoize callback functions"
+    pattern: |
+      const handleClick = useCallback((id: string) => {
+        // This function reference stays stable
+        doSomething(id);
+      }, []);  // Empty deps = never changes
+
+      // With dependencies
+      const handleSubmit = useCallback(() => {
+        submitForm(formData);
+      }, [formData]);
+
+    when_to_use:
+      - "Passing callbacks to memoized child components"
+      - "Callbacks used in useEffect dependencies"
+      - "Event handlers in performance-critical lists"
+
+  useMemo:
+    description: "Memoize expensive computations"
+    pattern: |
+      const expensiveValue = useMemo(() => {
+        return computeExpensiveValue(data);
+      }, [data]);
+
+      // Memoized object
+      const config = useMemo(() => ({
+        theme: 'dark',
+        locale: userLocale,
+      }), [userLocale]);
+
+    when_to_use:
+      - "Expensive calculations"
+      - "Creating objects/arrays used in dependencies"
+      - "Preventing unnecessary re-renders"
+
+  useRef:
+    description: "Mutable reference that persists across renders"
+    patterns:
+      dom_reference: |
+        const inputRef = useRef<HTMLInputElement>(null);
+
+        const focusInput = () => {
+          inputRef.current?.focus();
+        };
+
+        return <input ref={inputRef} />;
+
+      mutable_value: |
+        const renderCount = useRef(0);
+
+        useEffect(() => {
+          renderCount.current += 1;
+          console.log(`Rendered ${renderCount.current} times`);
+        });
+
+      previous_value: |
+        function usePrevious<T>(value: T): T | undefined {
+          const ref = useRef<T>();
+
+          useEffect(() => {
+            ref.current = value;
+          }, [value]);
+
+          return ref.current;
+        }
+
+custom_hooks:
+  useLocalStorage: |
+    function useLocalStorage<T>(key: string, initialValue: T) {
+      const [storedValue, setStoredValue] = useState<T>(() => {
+        try {
+          const item = window.localStorage.getItem(key);
+          return item ? JSON.parse(item) : initialValue;
+        } catch {
+          return initialValue;
+        }
+      });
+
+      const setValue = useCallback((value: T | ((val: T) => T)) => {
+        try {
+          const valueToStore = value instanceof Function
+            ? value(storedValue)
+            : value;
+          setStoredValue(valueToStore);
+          window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        } catch (error) {
+          console.error(error);
+        }
+      }, [key, storedValue]);
+
+      return [storedValue, setValue] as const;
+    }
+
+  useDebounce: |
+    function useDebounce<T>(value: T, delay: number): T {
+      const [debouncedValue, setDebouncedValue] = useState(value);
+
+      useEffect(() => {
+        const timer = setTimeout(() => {
+          setDebouncedValue(value);
+        }, delay);
+
+        return () => clearTimeout(timer);
+      }, [value, delay]);
+
+      return debouncedValue;
+    }
+
+  useFetch: |
+    function useFetch<T>(url: string) {
+      const [data, setData] = useState<T | null>(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState<Error | null>(null);
+
+      useEffect(() => {
+        let cancelled = false;
+
+        async function fetchData() {
+          try {
+            setLoading(true);
+            const response = await fetch(url);
+            const result = await response.json();
+            if (!cancelled) {
+              setData(result);
+            }
+          } catch (err) {
+            if (!cancelled) {
+              setError(err as Error);
+            }
+          } finally {
+            if (!cancelled) {
+              setLoading(false);
+            }
+          }
+        }
+
+        fetchData();
+        return () => { cancelled = true; };
+      }, [url]);
+
+      return { data, loading, error };
+    }
+
+  useMediaQuery: |
+    function useMediaQuery(query: string): boolean {
+      const [matches, setMatches] = useState(() =>
+        window.matchMedia(query).matches
+      );
+
+      useEffect(() => {
+        const mediaQuery = window.matchMedia(query);
+        const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
+
+        mediaQuery.addEventListener('change', handler);
+        return () => mediaQuery.removeEventListener('change', handler);
+      }, [query]);
+
+      return matches;
+    }
+
+rules_of_hooks:
+  rules:
+    - "Only call hooks at the top level"
+    - "Only call hooks from React functions"
+    - "Custom hooks must start with 'use'"
+    - "Call hooks in the same order every render"
+
+  violations:
+    conditional: |
+      // ❌ WRONG
+      if (condition) {
+        const [value, setValue] = useState(0);
+      }
+
+      // ✅ CORRECT
+      const [value, setValue] = useState(0);
+      if (condition) {
+        // use value
+      }
+
+    loop: |
+      // ❌ WRONG
+      items.forEach(item => {
+        const [value] = useState(item.value);
+      });
+
+      // ✅ CORRECT
+      const [values, setValues] = useState(items.map(i => i.value));
+
+eslint_plugin:
+  installation: "npm install -D eslint-plugin-react-hooks"
+  config: |
+    {
+      "plugins": ["react-hooks"],
+      "rules": {
+        "react-hooks/rules-of-hooks": "error",
+        "react-hooks/exhaustive-deps": "warn"
+      }
+    }
+
+testing_hooks:
+  renderHook: |
+    import { renderHook, act } from '@testing-library/react';
+
+    test('useCounter increments', () => {
+      const { result } = renderHook(() => useCounter(0));
+
+      act(() => {
+        result.current.increment();
+      });
+
+      expect(result.current.count).toBe(1);
+    });
+
+  with_provider: |
+    const wrapper = ({ children }) => (
+      <ThemeProvider theme="dark">{children}</ThemeProvider>
+    );
+
+    const { result } = renderHook(() => useTheme(), { wrapper });

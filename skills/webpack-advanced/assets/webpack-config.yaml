@@ -1,0 +1,295 @@
+# Webpack Configuration Patterns
+# Advanced bundling strategies and optimization
+
+basic_config:
+  webpack_config_js: |
+    const path = require('path');
+    const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+    module.exports = {
+      mode: 'development',
+      entry: './src/index.js',
+      output: {
+        path: path.resolve(__dirname, 'dist'),
+        filename: '[name].[contenthash].js',
+        clean: true,
+      },
+      module: {
+        rules: [
+          {
+            test: /\.(js|jsx|ts|tsx)$/,
+            exclude: /node_modules/,
+            use: 'babel-loader',
+          },
+          {
+            test: /\.css$/,
+            use: ['style-loader', 'css-loader'],
+          },
+        ],
+      },
+      plugins: [
+        new HtmlWebpackPlugin({
+          template: './public/index.html',
+        }),
+      ],
+    };
+
+loaders:
+  javascript:
+    babel_loader:
+      test: /\.(js|jsx)$/
+      exclude: /node_modules/
+      use:
+        loader: babel-loader
+        options:
+          presets:
+            - "@babel/preset-env"
+            - "@babel/preset-react"
+
+  typescript:
+    ts_loader:
+      test: /\.(ts|tsx)$/
+      exclude: /node_modules/
+      use: ts-loader
+
+  styles:
+    css:
+      test: /\.css$/
+      use:
+        - style-loader  # Injects into DOM
+        - css-loader    # Resolves imports
+        - postcss-loader  # PostCSS processing
+
+    sass:
+      test: /\.s[ac]ss$/
+      use:
+        - style-loader
+        - css-loader
+        - sass-loader
+
+    css_modules:
+      test: /\.module\.css$/
+      use:
+        - style-loader
+        - loader: css-loader
+          options:
+            modules: true
+
+  assets:
+    images:
+      test: /\.(png|jpg|gif|svg)$/
+      type: asset/resource
+      generator:
+        filename: images/[name].[hash][ext]
+
+    fonts:
+      test: /\.(woff|woff2|eot|ttf|otf)$/
+      type: asset/resource
+      generator:
+        filename: fonts/[name].[hash][ext]
+
+plugins:
+  essential:
+    html_webpack:
+      purpose: "Generates HTML with injected bundles"
+      config: |
+        new HtmlWebpackPlugin({
+          template: './public/index.html',
+          minify: {
+            collapseWhitespace: true,
+            removeComments: true,
+          },
+        })
+
+    mini_css_extract:
+      purpose: "Extracts CSS into separate files"
+      config: |
+        new MiniCssExtractPlugin({
+          filename: '[name].[contenthash].css',
+        })
+
+    define_plugin:
+      purpose: "Define environment variables"
+      config: |
+        new webpack.DefinePlugin({
+          'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+          'process.env.API_URL': JSON.stringify(process.env.API_URL),
+        })
+
+  optimization:
+    terser:
+      purpose: "JavaScript minification"
+      config: |
+        new TerserPlugin({
+          parallel: true,
+          terserOptions: {
+            compress: {
+              drop_console: true,
+            },
+          },
+        })
+
+    css_minimizer:
+      purpose: "CSS minification"
+      config: |
+        new CssMinimizerPlugin()
+
+    bundle_analyzer:
+      purpose: "Visualize bundle composition"
+      config: |
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          openAnalyzer: false,
+        })
+
+code_splitting:
+  entry_points:
+    config: |
+      entry: {
+        app: './src/index.js',
+        vendor: './src/vendor.js',
+      }
+
+  dynamic_imports:
+    syntax: |
+      // Dynamic import creates separate chunk
+      const module = await import('./heavy-module');
+
+      // With webpack magic comments
+      const Component = await import(
+        /* webpackChunkName: "my-chunk" */
+        /* webpackPrefetch: true */
+        './MyComponent'
+      );
+
+  split_chunks:
+    config: |
+      optimization: {
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+            },
+            common: {
+              minChunks: 2,
+              priority: -10,
+              reuseExistingChunk: true,
+            },
+          },
+        },
+        runtimeChunk: 'single',
+      }
+
+production_config:
+  full_example: |
+    const path = require('path');
+    const HtmlWebpackPlugin = require('html-webpack-plugin');
+    const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+    const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+    const TerserPlugin = require('terser-webpack-plugin');
+
+    module.exports = {
+      mode: 'production',
+      entry: './src/index.js',
+      output: {
+        path: path.resolve(__dirname, 'dist'),
+        filename: '[name].[contenthash].js',
+        clean: true,
+        publicPath: '/',
+      },
+      module: {
+        rules: [
+          {
+            test: /\.(js|jsx|ts|tsx)$/,
+            exclude: /node_modules/,
+            use: 'babel-loader',
+          },
+          {
+            test: /\.css$/,
+            use: [MiniCssExtractPlugin.loader, 'css-loader'],
+          },
+        ],
+      },
+      optimization: {
+        minimizer: [
+          new TerserPlugin(),
+          new CssMinimizerPlugin(),
+        ],
+        splitChunks: {
+          chunks: 'all',
+        },
+      },
+      plugins: [
+        new HtmlWebpackPlugin({
+          template: './public/index.html',
+          minify: true,
+        }),
+        new MiniCssExtractPlugin({
+          filename: '[name].[contenthash].css',
+        }),
+      ],
+    };
+
+module_federation:
+  host_config: |
+    const ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
+
+    module.exports = {
+      plugins: [
+        new ModuleFederationPlugin({
+          name: 'host',
+          remotes: {
+            remoteApp: 'remoteApp@http://localhost:3001/remoteEntry.js',
+          },
+          shared: ['react', 'react-dom'],
+        }),
+      ],
+    };
+
+  remote_config: |
+    new ModuleFederationPlugin({
+      name: 'remoteApp',
+      filename: 'remoteEntry.js',
+      exposes: {
+        './Button': './src/components/Button',
+      },
+      shared: ['react', 'react-dom'],
+    })
+
+dev_server:
+  config: |
+    devServer: {
+      port: 3000,
+      hot: true,
+      historyApiFallback: true,
+      proxy: {
+        '/api': 'http://localhost:8080',
+      },
+      static: {
+        directory: path.join(__dirname, 'public'),
+      },
+    }
+
+caching:
+  filesystem_cache: |
+    cache: {
+      type: 'filesystem',
+      buildDependencies: {
+        config: [__filename],
+      },
+    }
+
+  content_hash:
+    description: "Use [contenthash] for long-term caching"
+    pattern: "[name].[contenthash].js"
+
+performance_hints:
+  config: |
+    performance: {
+      hints: 'warning',
+      maxEntrypointSize: 250000,
+      maxAssetSize: 250000,
+    }

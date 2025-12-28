@@ -1,0 +1,450 @@
+# SSR/SSG Frameworks Configuration
+# Server-side rendering and static generation patterns
+
+nextjs:
+  app_router:
+    server_components: |
+      // app/page.tsx - Server Component (default)
+      async function HomePage() {
+        // This runs on the server
+        const data = await fetch('https://api.example.com/data', {
+          cache: 'force-cache' // Static by default
+        });
+
+        return <div>{JSON.stringify(data)}</div>;
+      }
+
+      export default HomePage;
+
+    client_components: |
+      // components/Counter.tsx
+      'use client';
+
+      import { useState } from 'react';
+
+      export function Counter() {
+        const [count, setCount] = useState(0);
+
+        return (
+          <button onClick={() => setCount(c => c + 1)}>
+            Count: {count}
+          </button>
+        );
+      }
+
+    data_fetching: |
+      // Static Data (SSG)
+      async function Page() {
+        const data = await fetch('https://api.example.com/static');
+        return <div>{data}</div>;
+      }
+
+      // Dynamic Data (SSR)
+      async function Page() {
+        const data = await fetch('https://api.example.com/dynamic', {
+          cache: 'no-store'
+        });
+        return <div>{data}</div>;
+      }
+
+      // Revalidate (ISR)
+      async function Page() {
+        const data = await fetch('https://api.example.com/data', {
+          next: { revalidate: 60 } // Revalidate every 60 seconds
+        });
+        return <div>{data}</div>;
+      }
+
+    dynamic_routes: |
+      // app/posts/[slug]/page.tsx
+      interface PageProps {
+        params: { slug: string };
+      }
+
+      export async function generateStaticParams() {
+        const posts = await getPosts();
+        return posts.map((post) => ({
+          slug: post.slug,
+        }));
+      }
+
+      export default async function PostPage({ params }: PageProps) {
+        const post = await getPost(params.slug);
+        return <article>{post.content}</article>;
+      }
+
+    metadata: |
+      // app/page.tsx
+      import { Metadata } from 'next';
+
+      export const metadata: Metadata = {
+        title: 'My Page',
+        description: 'Page description',
+        openGraph: {
+          title: 'My Page',
+          images: ['/og-image.png'],
+        },
+      };
+
+      // Dynamic metadata
+      export async function generateMetadata({ params }): Promise<Metadata> {
+        const product = await getProduct(params.id);
+        return {
+          title: product.name,
+          description: product.description,
+        };
+      }
+
+  pages_router:
+    getStaticProps: |
+      // pages/blog/[slug].tsx
+      export async function getStaticProps({ params }) {
+        const post = await getPostBySlug(params.slug);
+
+        return {
+          props: { post },
+          revalidate: 60, // ISR: regenerate every 60 seconds
+          notFound: !post, // Return 404 if no post
+        };
+      }
+
+      export async function getStaticPaths() {
+        const posts = await getAllPosts();
+
+        return {
+          paths: posts.map((post) => ({
+            params: { slug: post.slug },
+          })),
+          fallback: 'blocking', // or true, false
+        };
+      }
+
+    getServerSideProps: |
+      // pages/dashboard.tsx
+      export async function getServerSideProps({ req, res, query }) {
+        const session = await getSession(req);
+
+        if (!session) {
+          return {
+            redirect: {
+              destination: '/login',
+              permanent: false,
+            },
+          };
+        }
+
+        const userData = await getUserData(session.userId);
+
+        res.setHeader(
+          'Cache-Control',
+          'public, s-maxage=60, stale-while-revalidate=300'
+        );
+
+        return {
+          props: { user: userData },
+        };
+      }
+
+  api_routes: |
+    // app/api/posts/route.ts (App Router)
+    import { NextResponse } from 'next/server';
+
+    export async function GET(request: Request) {
+      const posts = await getPosts();
+      return NextResponse.json(posts);
+    }
+
+    export async function POST(request: Request) {
+      const body = await request.json();
+      const post = await createPost(body);
+      return NextResponse.json(post, { status: 201 });
+    }
+
+    // pages/api/posts.ts (Pages Router)
+    export default async function handler(req, res) {
+      if (req.method === 'GET') {
+        const posts = await getPosts();
+        res.status(200).json(posts);
+      } else if (req.method === 'POST') {
+        const post = await createPost(req.body);
+        res.status(201).json(post);
+      }
+    }
+
+  middleware: |
+    // middleware.ts
+    import { NextResponse } from 'next/server';
+    import type { NextRequest } from 'next/server';
+
+    export function middleware(request: NextRequest) {
+      // Check authentication
+      const token = request.cookies.get('token');
+
+      if (!token && request.nextUrl.pathname.startsWith('/dashboard')) {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+
+      // Add headers
+      const response = NextResponse.next();
+      response.headers.set('x-custom-header', 'value');
+
+      return response;
+    }
+
+    export const config = {
+      matcher: ['/dashboard/:path*', '/api/:path*'],
+    };
+
+nuxt:
+  data_fetching: |
+    <!-- pages/posts/[id].vue -->
+    <script setup lang="ts">
+    const route = useRoute();
+
+    // SSR data fetching
+    const { data: post, pending, error } = await useFetch(
+      `/api/posts/${route.params.id}`,
+      {
+        key: `post-${route.params.id}`,
+        server: true, // Run on server
+      }
+    );
+
+    // Client-only fetching
+    const { data: comments } = await useFetch(
+      `/api/posts/${route.params.id}/comments`,
+      {
+        lazy: true, // Fetch on client
+      }
+    );
+    </script>
+
+    <template>
+      <div v-if="pending">Loading...</div>
+      <div v-else-if="error">Error: {{ error.message }}</div>
+      <article v-else>
+        <h1>{{ post.title }}</h1>
+        <div v-html="post.content" />
+      </article>
+    </template>
+
+  useAsyncData: |
+    <script setup>
+    // More control over data fetching
+    const { data, pending, error, refresh } = await useAsyncData(
+      'posts',
+      () => $fetch('/api/posts'),
+      {
+        transform: (data) => data.slice(0, 10),
+        watch: [someRef], // Re-fetch when ref changes
+        default: () => [],
+      }
+    );
+    </script>
+
+  server_routes: |
+    // server/api/posts/[id].ts
+    export default defineEventHandler(async (event) => {
+      const id = getRouterParam(event, 'id');
+      const post = await getPostById(id);
+
+      if (!post) {
+        throw createError({
+          statusCode: 404,
+          message: 'Post not found',
+        });
+      }
+
+      return post;
+    });
+
+    // server/middleware/auth.ts
+    export default defineEventHandler((event) => {
+      const token = getCookie(event, 'token');
+
+      if (event.path.startsWith('/api/protected') && !token) {
+        throw createError({
+          statusCode: 401,
+          message: 'Unauthorized',
+        });
+      }
+    });
+
+  nuxt_config: |
+    // nuxt.config.ts
+    export default defineNuxtConfig({
+      ssr: true, // Enable SSR
+
+      routeRules: {
+        // Static pages
+        '/': { prerender: true },
+        '/about': { prerender: true },
+
+        // SSR with caching
+        '/products/**': { swr: 3600 },
+
+        // Client-only
+        '/admin/**': { ssr: false },
+
+        // ISR
+        '/blog/**': { isr: 60 },
+      },
+
+      nitro: {
+        preset: 'vercel', // or 'netlify', 'cloudflare', etc.
+      },
+    });
+
+rendering_strategies:
+  comparison: |
+    +-------------+------------------+------------------+------------------+
+    | Strategy    | Build Time       | Request Time     | Best For         |
+    +-------------+------------------+------------------+------------------+
+    | SSG         | Generate HTML    | Serve static     | Marketing, blogs |
+    | SSR         | None             | Generate HTML    | Dynamic content  |
+    | ISR         | Generate HTML    | Regenerate bg    | Hybrid needs     |
+    | CSR         | Bundle JS        | Render in client | Dashboards       |
+    +-------------+------------------+------------------+------------------+
+
+  when_to_use:
+    ssg: |
+      Use Static Site Generation when:
+      - Content doesn't change frequently
+      - Pages can be built at deploy time
+      - Need best performance
+      - SEO is important
+      Examples: Marketing pages, documentation, blogs
+
+    ssr: |
+      Use Server-Side Rendering when:
+      - Content changes frequently
+      - Need real-time data
+      - Personalized content per user
+      - SEO with dynamic content
+      Examples: E-commerce, social feeds, dashboards
+
+    isr: |
+      Use Incremental Static Regeneration when:
+      - Have many pages (>1000)
+      - Content changes but not in real-time
+      - Want SSG benefits with some freshness
+      Examples: Large e-commerce catalogs, news sites
+
+streaming_ssr:
+  react_suspense: |
+    // app/page.tsx (Next.js App Router)
+    import { Suspense } from 'react';
+
+    async function SlowComponent() {
+      const data = await fetchSlowData();
+      return <div>{data}</div>;
+    }
+
+    export default function Page() {
+      return (
+        <div>
+          <h1>Fast Content</h1>
+
+          <Suspense fallback={<p>Loading slow content...</p>}>
+            <SlowComponent />
+          </Suspense>
+        </div>
+      );
+    }
+
+  loading_ui: |
+    // app/dashboard/loading.tsx
+    export default function Loading() {
+      return (
+        <div className="skeleton">
+          <div className="skeleton-header" />
+          <div className="skeleton-content" />
+        </div>
+      );
+    }
+
+    // Automatically wraps page in Suspense
+
+edge_runtime:
+  nextjs_edge: |
+    // app/api/edge/route.ts
+    export const runtime = 'edge';
+
+    export async function GET(request: Request) {
+      const { searchParams } = new URL(request.url);
+      const name = searchParams.get('name') || 'World';
+
+      return new Response(`Hello, ${name}!`);
+    }
+
+  middleware_edge: |
+    // middleware.ts runs on Edge by default
+    import { NextResponse } from 'next/server';
+
+    export function middleware(request: NextRequest) {
+      // Geolocation available on Edge
+      const country = request.geo?.country || 'US';
+
+      // A/B testing with Edge
+      const bucket = Math.random() < 0.5 ? 'a' : 'b';
+      const response = NextResponse.next();
+      response.cookies.set('bucket', bucket);
+
+      return response;
+    }
+
+deployment:
+  vercel: |
+    # vercel.json
+    {
+      "framework": "nextjs",
+      "regions": ["iad1", "sfo1"],
+      "functions": {
+        "api/**/*.ts": {
+          "memory": 1024,
+          "maxDuration": 10
+        }
+      }
+    }
+
+  docker: |
+    # Dockerfile for Next.js
+    FROM node:18-alpine AS builder
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm ci
+    COPY . .
+    RUN npm run build
+
+    FROM node:18-alpine AS runner
+    WORKDIR /app
+    ENV NODE_ENV production
+
+    COPY --from=builder /app/public ./public
+    COPY --from=builder /app/.next/standalone ./
+    COPY --from=builder /app/.next/static ./.next/static
+
+    EXPOSE 3000
+    CMD ["node", "server.js"]
+
+  environment_variables: |
+    // next.config.js
+    module.exports = {
+      env: {
+        API_URL: process.env.API_URL,
+      },
+      // For client-side
+      publicRuntimeConfig: {
+        apiUrl: process.env.NEXT_PUBLIC_API_URL,
+      },
+    };
+
+best_practices:
+  - "Choose rendering strategy based on content freshness needs"
+  - "Use ISR for large sites with semi-static content"
+  - "Implement proper error boundaries"
+  - "Use streaming for better perceived performance"
+  - "Cache API responses appropriately"
+  - "Monitor Core Web Vitals"
+  - "Use edge runtime for low-latency operations"
+  - "Implement proper loading states"

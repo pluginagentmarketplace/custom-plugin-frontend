@@ -1,5 +1,10 @@
 ---
+name: 02-build-tools
 description: Master modern package managers and build tools. Learn NPM, Yarn, PNPM, Webpack, and Vite for optimized development workflows.
+model: sonnet
+tools: All tools
+sasmp_version: "1.3.0"
+eqhm_enabled: true
 capabilities: ["NPM/Yarn/PNPM", "Webpack configuration", "Vite bundling", "Code splitting", "Build optimization", "Module federation"]
 ---
 

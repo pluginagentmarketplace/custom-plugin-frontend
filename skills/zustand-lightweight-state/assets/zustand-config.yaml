@@ -1,0 +1,266 @@
+# Zustand State Management Patterns
+# Minimalist and flexible state management
+
+installation: "npm install zustand"
+
+basic_store:
+  simple: |
+    import { create } from 'zustand';
+
+    interface CounterStore {
+      count: number;
+      increment: () => void;
+      decrement: () => void;
+      reset: () => void;
+    }
+
+    const useCounterStore = create<CounterStore>((set) => ({
+      count: 0,
+      increment: () => set((state) => ({ count: state.count + 1 })),
+      decrement: () => set((state) => ({ count: state.count - 1 })),
+      reset: () => set({ count: 0 }),
+    }));
+
+    // Usage
+    function Counter() {
+      const count = useCounterStore((state) => state.count);
+      const increment = useCounterStore((state) => state.increment);
+
+      return (
+        <button onClick={increment}>{count}</button>
+      );
+    }
+
+  with_get: |
+    const useStore = create<Store>((set, get) => ({
+      count: 0,
+      doubledCount: () => get().count * 2,
+      asyncIncrement: async () => {
+        const current = get().count;
+        await delay(1000);
+        set({ count: current + 1 });
+      },
+    }));
+
+selecting_state:
+  single_value: |
+    const count = useStore((state) => state.count);
+
+  multiple_values: |
+    // ❌ Creates new object every render
+    const { count, name } = useStore((state) => ({
+      count: state.count,
+      name: state.name,
+    }));
+
+    // ✅ Use shallow for object selection
+    import { shallow } from 'zustand/shallow';
+
+    const { count, name } = useStore(
+      (state) => ({ count: state.count, name: state.name }),
+      shallow
+    );
+
+  without_rerender: |
+    // Get state without subscribing
+    const count = useStore.getState().count;
+
+    // Subscribe to changes outside React
+    const unsubscribe = useStore.subscribe(
+      (state) => console.log('Count:', state.count)
+    );
+
+middleware:
+  devtools: |
+    import { create } from 'zustand';
+    import { devtools } from 'zustand/middleware';
+
+    const useStore = create<Store>()(
+      devtools(
+        (set) => ({
+          count: 0,
+          increment: () => set(
+            (state) => ({ count: state.count + 1 }),
+            false,
+            'increment'  // Action name for devtools
+          ),
+        }),
+        { name: 'CounterStore' }
+      )
+    );
+
+  persist: |
+    import { create } from 'zustand';
+    import { persist, createJSONStorage } from 'zustand/middleware';
+
+    interface UserStore {
+      user: User | null;
+      setUser: (user: User) => void;
+      logout: () => void;
+    }
+
+    const useUserStore = create<UserStore>()(
+      persist(
+        (set) => ({
+          user: null,
+          setUser: (user) => set({ user }),
+          logout: () => set({ user: null }),
+        }),
+        {
+          name: 'user-storage',
+          storage: createJSONStorage(() => localStorage),
+          partialize: (state) => ({ user: state.user }),  // Only persist user
+        }
+      )
+    );
+
+  immer: |
+    import { create } from 'zustand';
+    import { immer } from 'zustand/middleware/immer';
+
+    interface TodoStore {
+      todos: Todo[];
+      addTodo: (text: string) => void;
+      toggleTodo: (id: string) => void;
+    }
+
+    const useTodoStore = create<TodoStore>()(
+      immer((set) => ({
+        todos: [],
+        addTodo: (text) => set((state) => {
+          state.todos.push({ id: Date.now().toString(), text, done: false });
+        }),
+        toggleTodo: (id) => set((state) => {
+          const todo = state.todos.find(t => t.id === id);
+          if (todo) todo.done = !todo.done;
+        }),
+      }))
+    );
+
+  combined: |
+    const useStore = create<Store>()(
+      devtools(
+        persist(
+          immer((set) => ({
+            // state and actions
+          })),
+          { name: 'app-storage' }
+        ),
+        { name: 'AppStore' }
+      )
+    );
+
+async_actions:
+  pattern: |
+    interface DataStore {
+      data: Item[];
+      loading: boolean;
+      error: string | null;
+      fetchData: () => Promise<void>;
+    }
+
+    const useDataStore = create<DataStore>((set) => ({
+      data: [],
+      loading: false,
+      error: null,
+      fetchData: async () => {
+        set({ loading: true, error: null });
+        try {
+          const response = await fetch('/api/data');
+          const data = await response.json();
+          set({ data, loading: false });
+        } catch (error) {
+          set({ error: error.message, loading: false });
+        }
+      },
+    }));
+
+computed_state:
+  pattern: |
+    interface CartStore {
+      items: CartItem[];
+      addItem: (item: CartItem) => void;
+      // Computed
+      totalItems: () => number;
+      totalPrice: () => number;
+    }
+
+    const useCartStore = create<CartStore>((set, get) => ({
+      items: [],
+      addItem: (item) => set((state) => ({
+        items: [...state.items, item]
+      })),
+      // Computed using get()
+      totalItems: () => get().items.length,
+      totalPrice: () => get().items.reduce((sum, item) => sum + item.price, 0),
+    }));
+
+store_slices:
+  pattern: |
+    // Slice pattern for large stores
+    interface UserSlice {
+      user: User | null;
+      setUser: (user: User) => void;
+    }
+
+    interface CartSlice {
+      items: CartItem[];
+      addItem: (item: CartItem) => void;
+    }
+
+    const createUserSlice = (set) => ({
+      user: null,
+      setUser: (user) => set({ user }),
+    });
+
+    const createCartSlice = (set) => ({
+      items: [],
+      addItem: (item) => set((state) => ({
+        items: [...state.items, item]
+      })),
+    });
+
+    const useStore = create<UserSlice & CartSlice>()((set) => ({
+      ...createUserSlice(set),
+      ...createCartSlice(set),
+    }));
+
+testing:
+  pattern: |
+    import { create } from 'zustand';
+
+    // Create store for testing
+    const createTestStore = () => create<CounterStore>((set) => ({
+      count: 0,
+      increment: () => set((state) => ({ count: state.count + 1 })),
+    }));
+
+    describe('Counter Store', () => {
+      it('should increment', () => {
+        const store = createTestStore();
+
+        store.getState().increment();
+
+        expect(store.getState().count).toBe(1);
+      });
+    });
+
+  with_initial_state: |
+    const createStore = (initialState = {}) =>
+      create<Store>((set) => ({
+        count: 0,
+        ...initialState,
+        increment: () => set((state) => ({ count: state.count + 1 })),
+      }));
+
+    // Test with custom initial state
+    const store = createStore({ count: 10 });
+
+best_practices:
+  - "Keep stores small and focused"
+  - "Use selectors to pick state slices"
+  - "Use shallow for object selections"
+  - "Combine middleware thoughtfully"
+  - "Use TypeScript for type safety"
+  - "Consider persist for user preferences"
+  - "Use devtools during development"

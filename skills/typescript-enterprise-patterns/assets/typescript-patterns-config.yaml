@@ -1,0 +1,314 @@
+# TypeScript Enterprise Patterns Configuration
+# Advanced type system patterns and examples
+
+branded_types:
+  concept: |
+    Branded types create nominally typed values in TypeScript's
+    structural type system, preventing accidental mixing of
+    semantically different values with the same underlying type.
+
+  pattern: |
+    // Brand definition
+    declare const brand: unique symbol;
+    type Brand<T, B> = T & { [brand]: B };
+
+    // Branded types
+    type UserId = Brand<string, 'UserId'>;
+    type OrderId = Brand<string, 'OrderId'>;
+
+    // Constructor functions
+    const createUserId = (id: string): UserId => id as UserId;
+    const createOrderId = (id: string): OrderId => id as OrderId;
+
+    // Usage - compile-time safety
+    const userId = createUserId('user-123');
+    const orderId = createOrderId('order-456');
+
+    function getUser(id: UserId) { /* ... */ }
+    getUser(userId);   // ✅ OK
+    getUser(orderId);  // ❌ Compile error!
+
+  use_cases:
+    - "Preventing ID mixups (UserId vs OrderId)"
+    - "Currency amounts (USD vs EUR)"
+    - "Validated strings (Email, Phone)"
+    - "Measurement units (Pixels vs Rem)"
+
+discriminated_unions:
+  concept: |
+    Discriminated unions use a common property (discriminant)
+    to narrow types automatically in switch/if statements.
+
+  pattern: |
+    // Base interface with discriminant
+    interface LoadingState {
+      status: 'loading';
+    }
+
+    interface SuccessState<T> {
+      status: 'success';
+      data: T;
+    }
+
+    interface ErrorState {
+      status: 'error';
+      error: Error;
+    }
+
+    type AsyncState<T> = LoadingState | SuccessState<T> | ErrorState;
+
+    // Type narrowing with exhaustive checking
+    function renderState<T>(state: AsyncState<T>): string {
+      switch (state.status) {
+        case 'loading':
+          return 'Loading...';
+        case 'success':
+          return `Data: ${state.data}`;
+        case 'error':
+          return `Error: ${state.error.message}`;
+        default:
+          // Exhaustive check - catches unhandled cases
+          const _exhaustive: never = state;
+          return _exhaustive;
+      }
+    }
+
+  benefits:
+    - "Type-safe state machines"
+    - "Exhaustive pattern matching"
+    - "Self-documenting code"
+    - "Compiler-enforced handling"
+
+conditional_types:
+  basics: |
+    // Basic conditional type
+    type IsString<T> = T extends string ? true : false;
+
+    // Infer keyword for extraction
+    type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
+
+    // Distributive conditional types
+    type NonNullable<T> = T extends null | undefined ? never : T;
+
+  advanced_patterns: |
+    // Deep partial
+    type DeepPartial<T> = T extends object
+      ? { [P in keyof T]?: DeepPartial<T[P]> }
+      : T;
+
+    // Extract function return type
+    type ReturnTypeOf<T> = T extends (...args: any[]) => infer R ? R : never;
+
+    // Filter union types
+    type FilterString<T> = T extends string ? T : never;
+    type Strings = FilterString<string | number | boolean>; // string
+
+    // Recursive conditional
+    type Flatten<T> = T extends Array<infer U> ? Flatten<U> : T;
+
+mapped_types:
+  basics: |
+    // Basic mapped type
+    type Readonly<T> = {
+      readonly [P in keyof T]: T[P];
+    };
+
+    // Partial mapped type
+    type Partial<T> = {
+      [P in keyof T]?: T[P];
+    };
+
+    // Key remapping (TypeScript 4.1+)
+    type Getters<T> = {
+      [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K];
+    };
+
+  modifiers: |
+    // Remove readonly
+    type Mutable<T> = {
+      -readonly [P in keyof T]: T[P];
+    };
+
+    // Remove optional
+    type Required<T> = {
+      [P in keyof T]-?: T[P];
+    };
+
+    // Combine modifiers
+    type MutableRequired<T> = {
+      -readonly [P in keyof T]-?: T[P];
+    };
+
+type_guards:
+  user_defined: |
+    // Type predicate
+    function isString(value: unknown): value is string {
+      return typeof value === 'string';
+    }
+
+    // Complex type guard
+    interface Cat { meow(): void; }
+    interface Dog { bark(): void; }
+
+    function isCat(animal: Cat | Dog): animal is Cat {
+      return 'meow' in animal;
+    }
+
+    // Assertion function
+    function assertNonNull<T>(
+      value: T,
+      message?: string
+    ): asserts value is NonNullable<T> {
+      if (value === null || value === undefined) {
+        throw new Error(message ?? 'Value is null or undefined');
+      }
+    }
+
+  usage: |
+    function processValue(value: unknown) {
+      if (isString(value)) {
+        // value is narrowed to string
+        console.log(value.toUpperCase());
+      }
+    }
+
+    function processAnimal(animal: Cat | Dog) {
+      if (isCat(animal)) {
+        animal.meow(); // OK
+      } else {
+        animal.bark(); // OK
+      }
+    }
+
+utility_types:
+  standard: |
+    // Pick - select specific keys
+    type UserPreview = Pick<User, 'id' | 'name'>;
+
+    // Omit - exclude specific keys
+    type CreateUser = Omit<User, 'id' | 'createdAt'>;
+
+    // Record - create object type
+    type StatusMap = Record<'pending' | 'active' | 'done', number>;
+
+    // Extract - filter union types
+    type StringOrNumber = Extract<string | number | boolean, string | number>;
+
+    // Exclude - remove from union
+    type NoBoolean = Exclude<string | number | boolean, boolean>;
+
+    // Parameters - get function parameters
+    type FnParams = Parameters<(a: string, b: number) => void>;
+
+    // ReturnType - get function return type
+    type FnReturn = ReturnType<() => Promise<User>>;
+
+  custom: |
+    // DeepReadonly
+    type DeepReadonly<T> = {
+      readonly [P in keyof T]: T[P] extends object
+        ? DeepReadonly<T[P]>
+        : T[P];
+    };
+
+    // Nullable
+    type Nullable<T> = T | null;
+
+    // AsyncReturnType
+    type AsyncReturnType<T extends (...args: any) => Promise<any>> =
+      T extends (...args: any) => Promise<infer R> ? R : never;
+
+design_patterns:
+  builder_pattern: |
+    class QueryBuilder<T extends object = {}> {
+      private query: Partial<T> = {};
+
+      where<K extends keyof T>(
+        key: K,
+        value: T[K]
+      ): QueryBuilder<T> {
+        this.query[key] = value;
+        return this;
+      }
+
+      build(): T {
+        return this.query as T;
+      }
+    }
+
+    // Type-safe chaining
+    const query = new QueryBuilder<User>()
+      .where('name', 'John')
+      .where('age', 30)
+      .build();
+
+  factory_pattern: |
+    type ShapeType = 'circle' | 'rectangle';
+
+    interface ShapeMap {
+      circle: Circle;
+      rectangle: Rectangle;
+    }
+
+    function createShape<T extends ShapeType>(
+      type: T
+    ): ShapeMap[T] {
+      // Implementation
+    }
+
+    const circle = createShape('circle'); // Type: Circle
+
+  plugin_architecture: |
+    interface Plugin<T = any> {
+      name: string;
+      init(context: T): void;
+    }
+
+    type PluginMap = Record<string, Plugin>;
+
+    class PluginSystem<T extends PluginMap = {}> {
+      register<K extends string, P extends Plugin>(
+        name: K,
+        plugin: P
+      ): PluginSystem<T & { [key in K]: P }> {
+        // Implementation
+        return this as any;
+      }
+    }
+
+template_literal_types:
+  basics: |
+    // String manipulation types
+    type EventName<T extends string> = `on${Capitalize<T>}`;
+    type OnClick = EventName<'click'>; // 'onClick'
+
+    // Path building
+    type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+    type Endpoint = `/${string}`;
+    type Route = `${HTTPMethod} ${Endpoint}`;
+
+    // Property accessors
+    type Getter<T extends string> = `get${Capitalize<T>}`;
+    type Setter<T extends string> = `set${Capitalize<T>}`;
+
+  advanced: |
+    // Parse route params
+    type ParseRoute<T extends string> =
+      T extends `${infer Start}:${infer Param}/${infer Rest}`
+        ? { [K in Param]: string } & ParseRoute<`/${Rest}`>
+        : T extends `${infer Start}:${infer Param}`
+          ? { [K in Param]: string }
+          : {};
+
+    type Params = ParseRoute<'/users/:id/posts/:postId'>;
+    // { id: string; postId: string }
+
+best_practices:
+  - "Prefer type inference over explicit types when possible"
+  - "Use branded types for domain-specific values"
+  - "Implement exhaustive checks with 'never' type"
+  - "Leverage conditional types for flexible APIs"
+  - "Create custom utility types for repeated patterns"
+  - "Use template literal types for string manipulation"
+  - "Document complex types with JSDoc comments"
+  - "Test types with dtslint or tsd"

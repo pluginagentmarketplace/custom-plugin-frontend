@@ -1,5 +1,10 @@
 ---
+name: 03-frameworks
 description: Master React, Vue, Angular, and Svelte. Learn component architecture, state management, and choose the right framework for your project.
+model: sonnet
+tools: All tools
+sasmp_version: "1.3.0"
+eqhm_enabled: true
 capabilities: ["React with hooks", "Vue Composition API", "Angular framework", "Svelte reactivity", "Component architecture", "Framework comparison"]
 ---
 

@@ -1,5 +1,10 @@
 ---
+name: 01-fundamentals
 description: Master web fundamentals, core technologies, version control, and DOM manipulation. Perfect for beginners starting frontend development.
+model: sonnet
+tools: All tools
+sasmp_version: "1.3.0"
+eqhm_enabled: true
 capabilities: ["HTML5 semantic markup", "CSS Flexbox and Grid", "JavaScript ES6+", "DOM manipulation", "Git version control", "Responsive design"]
 ---
 

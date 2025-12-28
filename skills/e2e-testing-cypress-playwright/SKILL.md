@@ -1,32 +1,45 @@
 ---
 name: e2e-testing-cypress-playwright
 description: Master end-to-end testing with Cypress and Playwright for complete user journey testing.
+sasmp_version: "1.3.0"
+bonded_agent: 05-testing
+bond_type: SECONDARY_BOND
 ---
 
 # E2E Testing with Cypress & Playwright
 
 Complete user journey automation.
 
-## Key Topics
+## MANDATORY
 - Test automation and scripting
-- Element selection and interaction
+- Element selection strategies
+- User interactions (click, type, select)
 - Assertions and waits
-- Cross-browser testing
-- Debugging and recording
-- CI/CD integration
-- Best practices
+- Test organization
+- Running tests locally
 
-## Learning Outcomes
-- ✅ Write E2E tests
-- ✅ Handle async operations
-- ✅ Debug failures
-- ✅ Run in CI/CD
-- ✅ Test complete flows
-- ✅ Choose Cypress or Playwright
+## OPTIONAL
+- Cross-browser testing
+- Network interception
+- Visual regression testing
+- Test recording and debugging
+- Custom commands
+- Page Object Model
+
+## ADVANCED
+- CI/CD integration
+- Parallel test execution
+- API testing
+- Performance testing
+- Accessibility testing
+- Mobile testing
+
+## Assets
+- See `assets/e2e-testing-config.yaml` for test patterns
 
 ## Resources
 - [Cypress Documentation](https://docs.cypress.io/)
 - [Playwright Documentation](https://playwright.dev/)
 
 ---
-**Status:** Active | **Version:** 1.0.0
+**Status:** Active | **Version:** 2.0.0

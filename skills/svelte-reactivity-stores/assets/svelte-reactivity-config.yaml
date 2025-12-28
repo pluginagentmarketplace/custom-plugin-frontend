@@ -1,0 +1,365 @@
+# Svelte Reactivity & Stores Patterns
+# Compile-time framework with true reactivity
+
+reactivity_basics:
+  reactive_variables: |
+    <script>
+      let count = 0;
+      let name = 'Svelte';
+
+      function increment() {
+        count += 1;  // Automatically triggers re-render
+      }
+    </script>
+
+    <button on:click={increment}>
+      Clicked {count} times
+    </button>
+
+  reactive_declarations: |
+    <script>
+      let count = 0;
+
+      // Reactive declaration - recalculates when count changes
+      $: doubled = count * 2;
+
+      // Reactive statement - runs when dependencies change
+      $: console.log(`Count is ${count}`);
+
+      // Reactive block
+      $: {
+        console.log(`Count: ${count}`);
+        console.log(`Doubled: ${doubled}`);
+      }
+
+      // Reactive conditional
+      $: if (count >= 10) {
+        alert('High count!');
+        count = 0;
+      }
+    </script>
+
+    <p>{count} x 2 = {doubled}</p>
+
+  array_and_object_reactivity: |
+    <script>
+      let items = [];
+
+      function addItem() {
+        // ✅ Creates new array reference
+        items = [...items, { id: Date.now(), name: 'New' }];
+      }
+
+      function removeItem(id) {
+        items = items.filter(item => item.id !== id);
+      }
+
+      // ❌ This won't trigger update
+      // items.push({ ... });
+
+      // ✅ This will trigger update
+      // items = [...items, { ... }];
+    </script>
+
+data_binding:
+  two_way_binding: |
+    <script>
+      let name = '';
+      let agreed = false;
+      let selected = 'a';
+      let selectedMultiple = [];
+    </script>
+
+    <!-- Text input -->
+    <input bind:value={name} />
+
+    <!-- Checkbox -->
+    <input type="checkbox" bind:checked={agreed} />
+
+    <!-- Radio group -->
+    <input type="radio" value="a" bind:group={selected} />
+    <input type="radio" value="b" bind:group={selected} />
+
+    <!-- Select -->
+    <select bind:value={selected}>
+      <option value="a">A</option>
+      <option value="b">B</option>
+    </select>
+
+    <!-- Multiple select -->
+    <select multiple bind:value={selectedMultiple}>
+      <option value="1">One</option>
+      <option value="2">Two</option>
+    </select>
+
+  element_bindings: |
+    <script>
+      let inputElement;
+      let width;
+      let height;
+    </script>
+
+    <!-- DOM element reference -->
+    <input bind:this={inputElement} />
+
+    <!-- Dimension bindings -->
+    <div bind:clientWidth={width} bind:clientHeight={height}>
+      Size: {width} x {height}
+    </div>
+
+stores:
+  writable_store: |
+    // stores.js
+    import { writable } from 'svelte/store';
+
+    export const count = writable(0);
+    export const user = writable({ name: '', email: '' });
+
+    // Custom methods
+    function createCounter() {
+      const { subscribe, set, update } = writable(0);
+
+      return {
+        subscribe,
+        increment: () => update(n => n + 1),
+        decrement: () => update(n => n - 1),
+        reset: () => set(0)
+      };
+    }
+
+    export const counter = createCounter();
+
+  readable_store: |
+    import { readable } from 'svelte/store';
+
+    // Readable store with initial value and start function
+    export const time = readable(new Date(), function start(set) {
+      const interval = setInterval(() => {
+        set(new Date());
+      }, 1000);
+
+      return function stop() {
+        clearInterval(interval);
+      };
+    });
+
+    // Mouse position store
+    export const mouse = readable({ x: 0, y: 0 }, function(set) {
+      function handleMove(event) {
+        set({ x: event.clientX, y: event.clientY });
+      }
+
+      window.addEventListener('mousemove', handleMove);
+      return () => window.removeEventListener('mousemove', handleMove);
+    });
+
+  derived_store: |
+    import { derived } from 'svelte/store';
+    import { count } from './stores';
+
+    // Single dependency
+    export const doubled = derived(count, $count => $count * 2);
+
+    // Multiple dependencies
+    export const fullName = derived(
+      [firstName, lastName],
+      ([$firstName, $lastName]) => `${$firstName} ${$lastName}`
+    );
+
+    // Async derived
+    export const userData = derived(
+      userId,
+      ($userId, set) => {
+        fetch(`/api/users/${$userId}`)
+          .then(res => res.json())
+          .then(data => set(data));
+
+        return () => {};  // cleanup
+      },
+      null  // initial value
+    );
+
+  auto_subscription: |
+    <script>
+      import { count } from './stores';
+
+      // $ prefix auto-subscribes and unsubscribes
+      $: console.log($count);
+    </script>
+
+    <p>Count: {$count}</p>
+    <button on:click={() => $count += 1}>+</button>
+
+  manual_subscription: |
+    <script>
+      import { onDestroy } from 'svelte';
+      import { count } from './stores';
+
+      let countValue;
+
+      const unsubscribe = count.subscribe(value => {
+        countValue = value;
+      });
+
+      onDestroy(unsubscribe);
+    </script>
+
+lifecycle:
+  hooks: |
+    <script>
+      import { onMount, onDestroy, beforeUpdate, afterUpdate } from 'svelte';
+
+      onMount(() => {
+        console.log('Component mounted');
+        // Return cleanup function (optional)
+        return () => console.log('Cleanup on mount');
+      });
+
+      onDestroy(() => {
+        console.log('Component destroyed');
+      });
+
+      beforeUpdate(() => {
+        console.log('About to update');
+      });
+
+      afterUpdate(() => {
+        console.log('Just updated');
+      });
+    </script>
+
+  tick: |
+    import { tick } from 'svelte';
+
+    async function handleClick() {
+      count += 1;
+      await tick();  // Wait for DOM update
+      // DOM is now updated
+      inputElement.focus();
+    }
+
+context_api:
+  setting_context: |
+    <script>
+      import { setContext } from 'svelte';
+
+      const theme = { color: 'dark', size: 'large' };
+      setContext('theme', theme);
+    </script>
+
+  getting_context: |
+    <script>
+      import { getContext } from 'svelte';
+
+      const theme = getContext('theme');
+    </script>
+
+    <div class={theme.color}>Themed content</div>
+
+transitions_and_animations:
+  built_in_transitions: |
+    <script>
+      import { fade, fly, slide, scale } from 'svelte/transition';
+
+      let visible = true;
+    </script>
+
+    {#if visible}
+      <div transition:fade>Fades in and out</div>
+      <div transition:fly={{ y: 200, duration: 500 }}>Flies</div>
+      <div transition:slide>Slides</div>
+      <div transition:scale={{ start: 0.5 }}>Scales</div>
+    {/if}
+
+  in_out_transitions: |
+    {#if visible}
+      <div in:fly={{ y: 200 }} out:fade>
+        Different in and out
+      </div>
+    {/if}
+
+  custom_transition: |
+    <script>
+      function typewriter(node, { speed = 1 }) {
+        const text = node.textContent;
+        const duration = text.length / (speed * 0.01);
+
+        return {
+          duration,
+          tick: t => {
+            const i = Math.trunc(text.length * t);
+            node.textContent = text.slice(0, i);
+          }
+        };
+      }
+    </script>
+
+    <p transition:typewriter={{ speed: 2 }}>
+      This text types itself
+    </p>
+
+actions:
+  basic_action: |
+    <script>
+      function tooltip(node, text) {
+        const tooltip = document.createElement('div');
+        tooltip.textContent = text;
+        tooltip.className = 'tooltip';
+
+        function handleMouseEnter() {
+          node.appendChild(tooltip);
+        }
+
+        function handleMouseLeave() {
+          tooltip.remove();
+        }
+
+        node.addEventListener('mouseenter', handleMouseEnter);
+        node.addEventListener('mouseleave', handleMouseLeave);
+
+        return {
+          update(newText) {
+            tooltip.textContent = newText;
+          },
+          destroy() {
+            node.removeEventListener('mouseenter', handleMouseEnter);
+            node.removeEventListener('mouseleave', handleMouseLeave);
+          }
+        };
+      }
+    </script>
+
+    <button use:tooltip={'Click me!'}>Hover for tooltip</button>
+
+component_composition:
+  slots: |
+    <!-- Card.svelte -->
+    <div class="card">
+      <slot name="header">Default header</slot>
+      <slot>Default content</slot>
+      <slot name="footer" />
+    </div>
+
+    <!-- Usage -->
+    <Card>
+      <h2 slot="header">Title</h2>
+      <p>Main content</p>
+      <button slot="footer">Submit</button>
+    </Card>
+
+  slot_props: |
+    <!-- List.svelte -->
+    <ul>
+      {#each items as item}
+        <li>
+          <slot {item} index={items.indexOf(item)}>
+            {item.name}
+          </slot>
+        </li>
+      {/each}
+    </ul>
+
+    <!-- Usage -->
+    <List {items} let:item let:index>
+      {index + 1}. {item.name}
+    </List>

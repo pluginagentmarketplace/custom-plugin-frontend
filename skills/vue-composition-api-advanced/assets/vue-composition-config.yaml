@@ -1,0 +1,336 @@
+# Vue Composition API Patterns
+# Modern Vue 3 development
+
+reactivity_basics:
+  ref:
+    description: "Reactive reference for primitive values"
+    syntax: |
+      import { ref } from 'vue';
+
+      const count = ref(0);
+      const name = ref('Vue');
+
+      // Access value
+      console.log(count.value);  // 0
+
+      // Update value
+      count.value++;
+
+      // In template, .value is auto-unwrapped
+      // <span>{{ count }}</span>
+
+  reactive:
+    description: "Reactive object"
+    syntax: |
+      import { reactive } from 'vue';
+
+      const state = reactive({
+        count: 0,
+        user: { name: 'Vue', age: 3 }
+      });
+
+      // Direct property access
+      state.count++;
+      state.user.name = 'Vue 3';
+
+    caveats: |
+      // ❌ Destructuring loses reactivity
+      const { count } = state;  // count is NOT reactive
+
+      // ✅ Use toRefs to preserve reactivity
+      import { toRefs } from 'vue';
+      const { count, user } = toRefs(state);
+
+computed_and_watch:
+  computed:
+    syntax: |
+      import { ref, computed } from 'vue';
+
+      const count = ref(0);
+
+      // Read-only computed
+      const doubled = computed(() => count.value * 2);
+
+      // Writable computed
+      const plusOne = computed({
+        get: () => count.value + 1,
+        set: (val) => { count.value = val - 1; }
+      });
+
+  watch:
+    description: "Watch specific reactive sources"
+    patterns:
+      single_ref: |
+        import { ref, watch } from 'vue';
+
+        const count = ref(0);
+
+        watch(count, (newValue, oldValue) => {
+          console.log(`Count changed: ${oldValue} -> ${newValue}`);
+        });
+
+      multiple_sources: |
+        const firstName = ref('Vue');
+        const lastName = ref('JS');
+
+        watch([firstName, lastName], ([newFirst, newLast], [oldFirst, oldLast]) => {
+          console.log('Name changed');
+        });
+
+      deep_watch: |
+        const state = reactive({ nested: { count: 0 } });
+
+        watch(
+          () => state.nested,
+          (newNested) => { console.log('Nested changed'); },
+          { deep: true }
+        );
+
+      immediate: |
+        watch(source, callback, { immediate: true });
+
+  watchEffect:
+    description: "Auto-tracks reactive dependencies"
+    syntax: |
+      import { ref, watchEffect } from 'vue';
+
+      const count = ref(0);
+      const name = ref('Vue');
+
+      // Automatically tracks count and name
+      watchEffect(() => {
+        console.log(`${name.value}: ${count.value}`);
+      });
+
+      // With cleanup
+      watchEffect((onCleanup) => {
+        const timer = setInterval(() => {}, 1000);
+        onCleanup(() => clearInterval(timer));
+      });
+
+lifecycle_hooks:
+  setup_syntax: |
+    import {
+      onMounted,
+      onUpdated,
+      onUnmounted,
+      onBeforeMount,
+      onBeforeUpdate,
+      onBeforeUnmount
+    } from 'vue';
+
+    // In setup function or <script setup>
+    onMounted(() => {
+      console.log('Component mounted');
+    });
+
+    onUnmounted(() => {
+      console.log('Component unmounted');
+    });
+
+script_setup:
+  basic: |
+    <script setup lang="ts">
+    import { ref, computed } from 'vue';
+
+    // Props
+    const props = defineProps<{
+      title: string;
+      count?: number;
+    }>();
+
+    // Emits
+    const emit = defineEmits<{
+      (e: 'update', value: number): void;
+      (e: 'close'): void;
+    }>();
+
+    // Reactive state
+    const count = ref(props.count ?? 0);
+
+    // Computed
+    const doubled = computed(() => count.value * 2);
+
+    // Methods
+    function increment() {
+      count.value++;
+      emit('update', count.value);
+    }
+    </script>
+
+    <template>
+      <div>
+        <h1>{{ title }}</h1>
+        <p>Count: {{ count }} (Doubled: {{ doubled }})</p>
+        <button @click="increment">+</button>
+      </div>
+    </template>
+
+composables:
+  useCounter: |
+    // composables/useCounter.ts
+    import { ref, computed } from 'vue';
+
+    export function useCounter(initialValue = 0) {
+      const count = ref(initialValue);
+
+      const doubled = computed(() => count.value * 2);
+
+      function increment() {
+        count.value++;
+      }
+
+      function decrement() {
+        count.value--;
+      }
+
+      function reset() {
+        count.value = initialValue;
+      }
+
+      return {
+        count,
+        doubled,
+        increment,
+        decrement,
+        reset
+      };
+    }
+
+  useFetch: |
+    // composables/useFetch.ts
+    import { ref, watchEffect, toValue, type MaybeRefOrGetter } from 'vue';
+
+    export function useFetch<T>(url: MaybeRefOrGetter<string>) {
+      const data = ref<T | null>(null);
+      const error = ref<Error | null>(null);
+      const loading = ref(false);
+
+      async function fetchData() {
+        loading.value = true;
+        error.value = null;
+
+        try {
+          const response = await fetch(toValue(url));
+          data.value = await response.json();
+        } catch (err) {
+          error.value = err as Error;
+        } finally {
+          loading.value = false;
+        }
+      }
+
+      watchEffect(() => {
+        fetchData();
+      });
+
+      return { data, error, loading, refetch: fetchData };
+    }
+
+  useLocalStorage: |
+    import { ref, watch } from 'vue';
+
+    export function useLocalStorage<T>(key: string, defaultValue: T) {
+      const storedValue = localStorage.getItem(key);
+      const data = ref<T>(storedValue ? JSON.parse(storedValue) : defaultValue);
+
+      watch(data, (newValue) => {
+        localStorage.setItem(key, JSON.stringify(newValue));
+      }, { deep: true });
+
+      return data;
+    }
+
+provide_inject:
+  pattern: |
+    // Parent component
+    import { provide, ref } from 'vue';
+
+    const theme = ref('dark');
+    provide('theme', theme);
+
+    // Or with readonly
+    import { readonly } from 'vue';
+    provide('theme', readonly(theme));
+
+    // Child component (any depth)
+    import { inject } from 'vue';
+
+    const theme = inject('theme', 'light');  // with default
+
+    // With TypeScript
+    import type { InjectionKey, Ref } from 'vue';
+
+    const ThemeKey: InjectionKey<Ref<string>> = Symbol('theme');
+    provide(ThemeKey, theme);
+    const injectedTheme = inject(ThemeKey);  // properly typed
+
+template_refs:
+  basic: |
+    <script setup>
+    import { ref, onMounted } from 'vue';
+
+    const inputRef = ref<HTMLInputElement | null>(null);
+
+    onMounted(() => {
+      inputRef.value?.focus();
+    });
+    </script>
+
+    <template>
+      <input ref="inputRef" />
+    </template>
+
+  component_ref: |
+    <script setup>
+    import { ref } from 'vue';
+    import ChildComponent from './ChildComponent.vue';
+
+    const childRef = ref<InstanceType<typeof ChildComponent> | null>(null);
+
+    function callChildMethod() {
+      childRef.value?.someMethod();
+    }
+    </script>
+
+    <template>
+      <ChildComponent ref="childRef" />
+    </template>
+
+typescript_patterns:
+  props_with_defaults: |
+    interface Props {
+      title: string;
+      count?: number;
+      items?: string[];
+    }
+
+    const props = withDefaults(defineProps<Props>(), {
+      count: 0,
+      items: () => []
+    });
+
+  typed_emits: |
+    const emit = defineEmits<{
+      (e: 'change', id: number): void;
+      (e: 'update:modelValue', value: string): void;
+    }>();
+
+  typed_slots: |
+    defineSlots<{
+      default(props: { item: Item }): any;
+      header(): any;
+    }>();
+
+vueuse_integration:
+  examples: |
+    import { useMouse, useLocalStorage, useDark } from '@vueuse/core';
+
+    // Mouse position
+    const { x, y } = useMouse();
+
+    // Dark mode toggle
+    const isDark = useDark();
+
+    // Local storage with auto-sync
+    const state = useLocalStorage('my-state', { count: 0 });

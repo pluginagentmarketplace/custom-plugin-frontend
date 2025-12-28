@@ -1,0 +1,331 @@
+# State Architecture Patterns
+# Advanced patterns for scalable state management
+
+flux_architecture:
+  principles:
+    - "Unidirectional data flow"
+    - "Single source of truth"
+    - "State is read-only"
+    - "Changes made with pure functions"
+
+  flow: |
+    View → Action → Dispatcher → Store → View
+    ↑                                      |
+    └──────────────────────────────────────┘
+
+normalized_state:
+  problem: |
+    // ❌ Nested/denormalized state
+    const state = {
+      posts: [
+        {
+          id: '1',
+          title: 'Post 1',
+          author: { id: 'a1', name: 'John' },
+          comments: [
+            { id: 'c1', text: 'Great!', author: { id: 'a2', name: 'Jane' } }
+          ]
+        }
+      ]
+    };
+    // Problems: duplication, hard to update, inconsistent
+
+  solution: |
+    // ✅ Normalized state
+    const state = {
+      entities: {
+        posts: {
+          '1': { id: '1', title: 'Post 1', authorId: 'a1', commentIds: ['c1'] }
+        },
+        users: {
+          'a1': { id: 'a1', name: 'John' },
+          'a2': { id: 'a2', name: 'Jane' }
+        },
+        comments: {
+          'c1': { id: 'c1', text: 'Great!', authorId: 'a2', postId: '1' }
+        }
+      },
+      ids: {
+        posts: ['1'],
+        users: ['a1', 'a2'],
+        comments: ['c1']
+      }
+    };
+
+  selectors: |
+    // Denormalize when needed
+    const selectPostWithDetails = (state, postId) => {
+      const post = state.entities.posts[postId];
+      return {
+        ...post,
+        author: state.entities.users[post.authorId],
+        comments: post.commentIds.map(id => ({
+          ...state.entities.comments[id],
+          author: state.entities.users[state.entities.comments[id].authorId]
+        }))
+      };
+    };
+
+cqrs_pattern:
+  concept: |
+    // CQRS = Command Query Responsibility Segregation
+    // Separate read (Query) and write (Command) operations
+
+    // Commands (write operations)
+    interface CreateUserCommand {
+      type: 'CREATE_USER';
+      payload: { name: string; email: string };
+    }
+
+    interface UpdateUserCommand {
+      type: 'UPDATE_USER';
+      payload: { id: string; updates: Partial<User> };
+    }
+
+    // Queries (read operations)
+    interface GetUserQuery {
+      type: 'GET_USER';
+      payload: { id: string };
+    }
+
+    interface ListUsersQuery {
+      type: 'LIST_USERS';
+      payload: { filter?: string; page?: number };
+    }
+
+  implementation: |
+    // Command handler
+    class UserCommandHandler {
+      constructor(private repository: UserRepository) {}
+
+      async handle(command: UserCommand): Promise<void> {
+        switch (command.type) {
+          case 'CREATE_USER':
+            await this.repository.create(command.payload);
+            break;
+          case 'UPDATE_USER':
+            await this.repository.update(command.payload.id, command.payload.updates);
+            break;
+        }
+      }
+    }
+
+    // Query handler (can use different data source optimized for reads)
+    class UserQueryHandler {
+      constructor(private readModel: UserReadModel) {}
+
+      async handle(query: UserQuery): Promise<User | User[]> {
+        switch (query.type) {
+          case 'GET_USER':
+            return this.readModel.findById(query.payload.id);
+          case 'LIST_USERS':
+            return this.readModel.list(query.payload);
+        }
+      }
+    }
+
+event_sourcing:
+  concept: |
+    // Store events instead of current state
+    // Current state = replay all events
+
+    interface Event {
+      id: string;
+      type: string;
+      timestamp: Date;
+      payload: unknown;
+      aggregateId: string;
+    }
+
+    // Events
+    type UserEvent =
+      | { type: 'USER_CREATED'; payload: { name: string; email: string } }
+      | { type: 'USER_EMAIL_CHANGED'; payload: { newEmail: string } }
+      | { type: 'USER_DEACTIVATED'; payload: {} };
+
+  implementation: |
+    class UserAggregate {
+      private events: UserEvent[] = [];
+      private state: User | null = null;
+
+      // Apply event to update state
+      private apply(event: UserEvent): void {
+        switch (event.type) {
+          case 'USER_CREATED':
+            this.state = {
+              name: event.payload.name,
+              email: event.payload.email,
+              active: true
+            };
+            break;
+          case 'USER_EMAIL_CHANGED':
+            if (this.state) {
+              this.state.email = event.payload.newEmail;
+            }
+            break;
+          case 'USER_DEACTIVATED':
+            if (this.state) {
+              this.state.active = false;
+            }
+            break;
+        }
+      }
+
+      // Rebuild state from events
+      rehydrate(events: UserEvent[]): void {
+        events.forEach(event => this.apply(event));
+        this.events = events;
+      }
+
+      // Commands generate events
+      changeEmail(newEmail: string): UserEvent {
+        const event: UserEvent = {
+          type: 'USER_EMAIL_CHANGED',
+          payload: { newEmail }
+        };
+        this.apply(event);
+        this.events.push(event);
+        return event;
+      }
+    }
+
+state_machines:
+  xstate_example: |
+    import { createMachine, assign } from 'xstate';
+
+    interface FetchContext {
+      data: unknown;
+      error: string | null;
+    }
+
+    type FetchEvent =
+      | { type: 'FETCH' }
+      | { type: 'RESOLVE'; data: unknown }
+      | { type: 'REJECT'; error: string };
+
+    const fetchMachine = createMachine<FetchContext, FetchEvent>({
+      id: 'fetch',
+      initial: 'idle',
+      context: {
+        data: null,
+        error: null,
+      },
+      states: {
+        idle: {
+          on: { FETCH: 'loading' }
+        },
+        loading: {
+          invoke: {
+            src: 'fetchData',
+            onDone: {
+              target: 'success',
+              actions: assign({ data: (_, event) => event.data })
+            },
+            onError: {
+              target: 'failure',
+              actions: assign({ error: (_, event) => event.data })
+            }
+          }
+        },
+        success: {
+          on: { FETCH: 'loading' }
+        },
+        failure: {
+          on: { FETCH: 'loading' }
+        }
+      }
+    });
+
+  react_usage: |
+    import { useMachine } from '@xstate/react';
+
+    function DataFetcher() {
+      const [state, send] = useMachine(fetchMachine, {
+        services: {
+          fetchData: async () => {
+            const response = await fetch('/api/data');
+            return response.json();
+          }
+        }
+      });
+
+      return (
+        <div>
+          {state.matches('idle') && (
+            <button onClick={() => send('FETCH')}>Load</button>
+          )}
+          {state.matches('loading') && <span>Loading...</span>}
+          {state.matches('success') && <div>{JSON.stringify(state.context.data)}</div>}
+          {state.matches('failure') && <span>Error: {state.context.error}</span>}
+        </div>
+      );
+    }
+
+optimistic_updates:
+  pattern: |
+    async function updateTodo(id: string, updates: Partial<Todo>) {
+      // 1. Save current state for rollback
+      const previousTodo = getTodo(id);
+
+      // 2. Optimistically update UI
+      dispatch({ type: 'UPDATE_TODO', payload: { id, ...updates } });
+
+      try {
+        // 3. Send to server
+        await api.updateTodo(id, updates);
+      } catch (error) {
+        // 4. Rollback on failure
+        dispatch({ type: 'UPDATE_TODO', payload: previousTodo });
+        throw error;
+      }
+    }
+
+  tanstack_query: |
+    const mutation = useMutation({
+      mutationFn: updateTodo,
+      onMutate: async (newTodo) => {
+        await queryClient.cancelQueries({ queryKey: ['todos'] });
+
+        const previousTodos = queryClient.getQueryData(['todos']);
+
+        queryClient.setQueryData(['todos'], (old) =>
+          old.map(todo => todo.id === newTodo.id ? { ...todo, ...newTodo } : todo)
+        );
+
+        return { previousTodos };
+      },
+      onError: (err, newTodo, context) => {
+        queryClient.setQueryData(['todos'], context.previousTodos);
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: ['todos'] });
+      },
+    });
+
+server_vs_client_state:
+  separation: |
+    // Server State (TanStack Query, SWR)
+    // - Remote data from APIs
+    // - Needs caching, revalidation, error handling
+    // - Potentially stale, needs sync
+
+    const { data: users } = useQuery({
+      queryKey: ['users'],
+      queryFn: fetchUsers
+    });
+
+    // Client State (useState, Zustand, Context)
+    // - UI state (modals, sidebars)
+    // - Form state
+    // - User preferences
+
+    const [isModalOpen, setModalOpen] = useState(false);
+    const theme = useTheme();
+
+best_practices:
+  - "Normalize relational data"
+  - "Separate server and client state"
+  - "Use state machines for complex flows"
+  - "Implement optimistic updates for UX"
+  - "Consider CQRS for complex domains"
+  - "Keep state minimal and derive the rest"

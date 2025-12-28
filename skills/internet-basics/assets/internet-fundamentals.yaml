@@ -1,0 +1,155 @@
+# Internet Fundamentals Configuration
+# Web architecture and networking concepts
+
+http_methods:
+  GET:
+    purpose: "Retrieve data"
+    idempotent: true
+    cacheable: true
+    example: "GET /api/users/123"
+
+  POST:
+    purpose: "Create new resource"
+    idempotent: false
+    cacheable: false
+    example: "POST /api/users"
+
+  PUT:
+    purpose: "Replace entire resource"
+    idempotent: true
+    cacheable: false
+    example: "PUT /api/users/123"
+
+  PATCH:
+    purpose: "Partial update"
+    idempotent: false
+    cacheable: false
+    example: "PATCH /api/users/123"
+
+  DELETE:
+    purpose: "Remove resource"
+    idempotent: true
+    cacheable: false
+    example: "DELETE /api/users/123"
+
+status_codes:
+  informational:
+    100: "Continue"
+    101: "Switching Protocols"
+
+  success:
+    200: "OK"
+    201: "Created"
+    204: "No Content"
+
+  redirection:
+    301: "Moved Permanently"
+    302: "Found (Temporary Redirect)"
+    304: "Not Modified"
+
+  client_errors:
+    400: "Bad Request"
+    401: "Unauthorized"
+    403: "Forbidden"
+    404: "Not Found"
+    422: "Unprocessable Entity"
+    429: "Too Many Requests"
+
+  server_errors:
+    500: "Internal Server Error"
+    502: "Bad Gateway"
+    503: "Service Unavailable"
+    504: "Gateway Timeout"
+
+common_headers:
+  request:
+    - "Authorization: Bearer <token>"
+    - "Content-Type: application/json"
+    - "Accept: application/json"
+    - "Cache-Control: no-cache"
+    - "Origin: https://example.com"
+
+  response:
+    - "Content-Type: application/json"
+    - "Cache-Control: max-age=3600"
+    - "ETag: \"abc123\""
+    - "Access-Control-Allow-Origin: *"
+    - "Set-Cookie: session=xyz; HttpOnly; Secure"
+
+cors_configuration:
+  simple_requests:
+    methods: ["GET", "HEAD", "POST"]
+    headers: ["Accept", "Content-Type", "Content-Language"]
+
+  preflight_required:
+    - "Custom headers"
+    - "Methods other than GET/HEAD/POST"
+    - "Content-Type other than form-data/urlencoded/text"
+
+  server_headers: |
+    Access-Control-Allow-Origin: https://example.com
+    Access-Control-Allow-Methods: GET, POST, PUT, DELETE
+    Access-Control-Allow-Headers: Content-Type, Authorization
+    Access-Control-Max-Age: 86400
+
+browser_storage:
+  localStorage:
+    capacity: "5-10MB"
+    persistence: "Until cleared"
+    scope: "Same origin"
+    sync: true
+
+  sessionStorage:
+    capacity: "5-10MB"
+    persistence: "Until tab closed"
+    scope: "Same origin, same tab"
+    sync: true
+
+  indexedDB:
+    capacity: "Browser dependent (large)"
+    persistence: "Until cleared"
+    scope: "Same origin"
+    sync: false
+
+  cookies:
+    capacity: "4KB"
+    persistence: "Configurable"
+    scope: "Domain/path based"
+    sent_with_requests: true
+
+caching_strategies:
+  cache_first:
+    description: "Check cache, fall back to network"
+    use_case: "Static assets, fonts"
+
+  network_first:
+    description: "Try network, fall back to cache"
+    use_case: "API responses, dynamic content"
+
+  stale_while_revalidate:
+    description: "Return cache, update in background"
+    use_case: "Content that updates occasionally"
+
+  cache_only:
+    description: "Only serve from cache"
+    use_case: "Offline-first apps"
+
+  network_only:
+    description: "Always fetch from network"
+    use_case: "Real-time data"
+
+security_best_practices:
+  transport:
+    - "Always use HTTPS"
+    - "Enable HSTS header"
+    - "Use secure cookies (HttpOnly, Secure, SameSite)"
+
+  authentication:
+    - "Store tokens securely"
+    - "Use short-lived access tokens"
+    - "Implement refresh token rotation"
+
+  content:
+    - "Set Content-Security-Policy header"
+    - "Enable X-Frame-Options"
+    - "Sanitize user input"

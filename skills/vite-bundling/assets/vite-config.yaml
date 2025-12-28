@@ -1,0 +1,292 @@
+# Vite Configuration Patterns
+# Modern build tooling with native ESM
+
+project_creation:
+  commands:
+    npm: "npm create vite@latest my-app -- --template react-ts"
+    yarn: "yarn create vite my-app --template react-ts"
+    pnpm: "pnpm create vite my-app --template react-ts"
+
+  templates:
+    - vanilla
+    - vanilla-ts
+    - vue
+    - vue-ts
+    - react
+    - react-ts
+    - react-swc
+    - react-swc-ts
+    - preact
+    - preact-ts
+    - svelte
+    - svelte-ts
+
+basic_config:
+  vite_config_ts: |
+    import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+
+    export default defineConfig({
+      plugins: [react()],
+      server: {
+        port: 3000,
+        open: true,
+      },
+      build: {
+        outDir: 'dist',
+        sourcemap: true,
+      },
+    });
+
+server_options:
+  config: |
+    server: {
+      port: 3000,
+      host: true,  // Expose to network
+      open: true,  // Open browser
+      strictPort: true,  // Fail if port busy
+
+      // Proxy API requests
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+      },
+
+      // CORS configuration
+      cors: true,
+
+      // HMR options
+      hmr: {
+        overlay: true,
+      },
+    }
+
+build_options:
+  config: |
+    build: {
+      outDir: 'dist',
+      sourcemap: true,
+      minify: 'esbuild',  // or 'terser'
+
+      // Target browsers
+      target: 'esnext',
+
+      // Chunk size warnings
+      chunkSizeWarningLimit: 500,
+
+      // Rollup options
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            router: ['react-router-dom'],
+          },
+        },
+      },
+
+      // CSS code splitting
+      cssCodeSplit: true,
+
+      // Asset handling
+      assetsInlineLimit: 4096,
+    }
+
+path_aliases:
+  vite_config: |
+    import path from 'path';
+
+    export default defineConfig({
+      resolve: {
+        alias: {
+          '@': path.resolve(__dirname, './src'),
+          '@components': path.resolve(__dirname, './src/components'),
+          '@utils': path.resolve(__dirname, './src/utils'),
+          '@hooks': path.resolve(__dirname, './src/hooks'),
+        },
+      },
+    });
+
+  tsconfig_paths: |
+    {
+      "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+          "@/*": ["src/*"],
+          "@components/*": ["src/components/*"]
+        }
+      }
+    }
+
+environment_variables:
+  files:
+    - ".env"  # All modes
+    - ".env.local"  # All modes, gitignored
+    - ".env.development"  # Dev mode
+    - ".env.production"  # Prod mode
+    - ".env.development.local"  # Dev, gitignored
+
+  usage: |
+    // .env file
+    VITE_API_URL=https://api.example.com
+    VITE_APP_TITLE=My App
+
+    // In code (must prefix with VITE_)
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const isDev = import.meta.env.DEV;
+    const isProd = import.meta.env.PROD;
+    const mode = import.meta.env.MODE;
+
+css_options:
+  preprocessors: |
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: `@import "@/styles/variables.scss";`,
+        },
+        less: {
+          javascriptEnabled: true,
+        },
+      },
+
+      // CSS Modules
+      modules: {
+        localsConvention: 'camelCase',
+        scopeBehaviour: 'local',
+      },
+    }
+
+plugins:
+  react:
+    basic: |
+      import react from '@vitejs/plugin-react';
+      plugins: [react()]
+
+    swc: |
+      import react from '@vitejs/plugin-react-swc';
+      plugins: [react()]
+
+  vue: |
+    import vue from '@vitejs/plugin-vue';
+    plugins: [vue()]
+
+  svelte: |
+    import { svelte } from '@sveltejs/vite-plugin-svelte';
+    plugins: [svelte()]
+
+  useful_plugins:
+    - name: "vite-plugin-compression"
+      purpose: "Gzip/Brotli compression"
+
+    - name: "vite-plugin-pwa"
+      purpose: "PWA support"
+
+    - name: "vite-plugin-checker"
+      purpose: "TypeScript/ESLint checking"
+
+    - name: "vite-plugin-svg-icons"
+      purpose: "SVG sprite generation"
+
+code_splitting:
+  dynamic_import: |
+    // Automatic code splitting with dynamic imports
+    const Component = lazy(() => import('./Component'));
+
+    // With named chunks
+    const Component = lazy(() =>
+      import(/* webpackChunkName: "my-chunk" */ './Component')
+    );
+
+  manual_chunks: |
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react')) return 'react-vendor';
+            if (id.includes('lodash')) return 'lodash-vendor';
+            return 'vendor';
+          }
+        },
+      },
+    }
+
+ssr_config:
+  basic: |
+    export default defineConfig({
+      build: {
+        ssr: true,
+        rollupOptions: {
+          input: './src/entry-server.ts',
+        },
+      },
+    });
+
+library_mode:
+  config: |
+    build: {
+      lib: {
+        entry: './src/index.ts',
+        name: 'MyLibrary',
+        fileName: (format) => `my-lib.${format}.js`,
+      },
+      rollupOptions: {
+        external: ['react', 'react-dom'],
+        output: {
+          globals: {
+            react: 'React',
+            'react-dom': 'ReactDOM',
+          },
+        },
+      },
+    }
+
+optimization:
+  pre_bundling: |
+    optimizeDeps: {
+      include: ['lodash-es', 'axios'],
+      exclude: ['my-local-package'],
+    }
+
+  build_analysis: |
+    // Install: npm install rollup-plugin-visualizer
+    import { visualizer } from 'rollup-plugin-visualizer';
+
+    plugins: [
+      visualizer({
+        open: true,
+        filename: 'stats.html',
+      }),
+    ]
+
+typescript_config:
+  tsconfig: |
+    {
+      "compilerOptions": {
+        "target": "ES2020",
+        "useDefineForClassFields": true,
+        "lib": ["ES2020", "DOM", "DOM.Iterable"],
+        "module": "ESNext",
+        "skipLibCheck": true,
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react-jsx",
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true
+      },
+      "include": ["src"]
+    }
+
+performance_tips:
+  - "Use esbuild for faster TypeScript transpilation"
+  - "Enable CSS code splitting for parallel loading"
+  - "Configure manualChunks for optimal caching"
+  - "Use dynamic imports for route-based splitting"
+  - "Pre-bundle large dependencies"
+  - "Enable build.sourcemap: 'hidden' for production"

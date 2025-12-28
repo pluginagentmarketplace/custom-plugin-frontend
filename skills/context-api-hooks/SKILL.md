@@ -1,32 +1,45 @@
 ---
 name: context-api-hooks
 description: Master React Context API and custom hooks for state management without Redux.
+sasmp_version: "1.3.0"
+bonded_agent: 04-state-management
+bond_type: SECONDARY_BOND
 ---
 
 # Context API & Custom Hooks
 
 Built-in React state management solution.
 
-## Key Topics
-- Creating Context
-- Providers and consumers
-- useContext hook
-- Custom hooks
-- Performance optimization
-- When to use Context vs Redux
-- Complex state with useReducer
+## MANDATORY
+- Creating Context with createContext
+- Provider component setup
+- useContext hook usage
+- Context with TypeScript
+- Avoiding prop drilling
+- Default values
 
-## Learning Outcomes
-- ✅ Create and provide context
-- ✅ Build custom hooks
-- ✅ Manage shared state
-- ✅ Optimize re-renders
-- ✅ Choose appropriate patterns
-- ✅ Handle complex scenarios
+## OPTIONAL
+- Multiple contexts
+- Context with useReducer
+- Performance considerations
+- Context composition
+- Custom provider hooks
+- Context selectors
+
+## ADVANCED
+- Context optimization patterns
+- Memoization strategies
+- Context vs Redux comparison
+- Testing context providers
+- Server components and context
+- Dynamic context values
+
+## Assets
+- See `assets/context-api-config.yaml` for patterns
 
 ## Resources
 - [React Context](https://react.dev/reference/react/useContext)
 - [Custom Hooks](https://react.dev/learn/reusing-logic-with-custom-hooks)
 
 ---
-**Status:** Active | **Version:** 1.0.0
+**Status:** Active | **Version:** 2.0.0

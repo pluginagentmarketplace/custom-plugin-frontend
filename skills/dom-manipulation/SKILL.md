@@ -1,55 +1,43 @@
 ---
 name: dom-manipulation
-description: Master DOM selection, manipulation, event handling, and dynamic content creation for interactive web applications.
+description: Master DOM selection, manipulation, event handling, and dynamic content creation for interactive web applications
+sasmp_version: "1.3.0"
+bonded_agent: 01-fundamentals
+bond_type: SECONDARY_BOND
 ---
 
 # DOM Manipulation
 
-## Learning Objectives
-- Dynamically modify web page content
-- Handle user interactions effectively
-- Create interactive web applications
-- Select and traverse DOM elements
-- Optimize DOM performance
+## MANDATORY
+- DOM selection (querySelector, querySelectorAll, getElementById)
+- Element manipulation (innerHTML, textContent, setAttribute)
+- Event handling (addEventListener, event delegation)
+- Creating and removing elements
+- Class manipulation (classList API)
+- Form handling and validation
 
-## Key Topics
+## OPTIONAL
+- MutationObserver for DOM changes
+- IntersectionObserver for visibility detection
+- ResizeObserver for element sizing
+- Custom events (CustomEvent)
+- Template elements
+- Shadow DOM basics
 
-### Understanding the DOM
-- What is the DOM?
-- DOM tree structure
-- Nodes and elements
-- DOM API
+## ADVANCED
+- Performance optimization (DocumentFragment, batch updates)
+- Virtual scrolling implementation
+- DOM diffing algorithms
+- Web Components with DOM
+- Accessibility tree manipulation
+- DOM sanitization (DOMPurify)
 
-### Selecting Elements
-- getElementById()
-- getElementsByClassName()
-- getElementsByTagName()
-- querySelector()
-- querySelectorAll()
-
-### Manipulating Elements
-- Changing content (innerHTML, textContent)
-- Modifying attributes
-- Changing styles
-- classList methods
-
-### Creating and Removing Elements
-- createElement()
-- appendChild()
-- insertBefore()
-- removeChild()
-- remove()
-
-### Event Handling
-- Event types (click, submit, input, etc.)
-- addEventListener()
-- Event object properties
-- Event bubbling and capturing
-- Event delegation
+## Assets
+- See `assets/dom-patterns.yaml` for DOM manipulation patterns
 
 ## Resources
 - [MDN: DOM Manipulation](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Manipulating_documents)
-- [Event Handling](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events)
+- [MDN: Event Reference](https://developer.mozilla.org/en-US/docs/Web/Events)
 
 ---
-**Status:** Active | **Version:** 1.0.0
+**Status:** Active | **Version:** 2.0.0

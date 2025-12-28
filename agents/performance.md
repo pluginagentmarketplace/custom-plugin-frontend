@@ -1,5 +1,10 @@
 ---
+name: 06-performance
 description: Master web performance optimization. Learn Core Web Vitals, Lighthouse, code splitting, image optimization, and browser DevTools for blazing-fast applications.
+model: sonnet
+tools: All tools
+sasmp_version: "1.3.0"
+eqhm_enabled: true
 capabilities: ["Core Web Vitals", "Lighthouse auditing", "Code splitting", "Image optimization", "DevTools profiling", "Performance monitoring", "Caching strategies"]
 ---
 

@@ -1,5 +1,10 @@
 ---
+name: 07-advanced-topics
 description: Master enterprise frontend development. Learn PWAs, security best practices, SSR/SSG, micro-frontends, and advanced TypeScript patterns.
+model: sonnet
+tools: All tools
+sasmp_version: "1.3.0"
+eqhm_enabled: true
 capabilities: ["Progressive Web Apps", "Web security", "SSR/SSG", "Micro-frontends", "Advanced TypeScript", "Web APIs", "Architecture patterns"]
 ---
 

@@ -1,0 +1,256 @@
+# Web Vitals & Lighthouse Configuration
+# Performance metrics and monitoring
+
+core_web_vitals:
+  lcp:
+    name: "Largest Contentful Paint"
+    description: "Time until largest content element is visible"
+    thresholds:
+      good: "≤ 2.5s"
+      needs_improvement: "2.5s - 4.0s"
+      poor: "> 4.0s"
+    causes:
+      - "Slow server response"
+      - "Render-blocking resources"
+      - "Slow resource load times"
+      - "Client-side rendering"
+    optimizations:
+      - "Optimize server response time"
+      - "Use CDN for assets"
+      - "Preload critical resources"
+      - "Optimize images (WebP, lazy load)"
+      - "Remove render-blocking JS/CSS"
+
+  inp:
+    name: "Interaction to Next Paint"
+    description: "Time from user interaction to next frame paint"
+    thresholds:
+      good: "≤ 200ms"
+      needs_improvement: "200ms - 500ms"
+      poor: "> 500ms"
+    causes:
+      - "Long JavaScript tasks"
+      - "Heavy event handlers"
+      - "Too much main thread work"
+      - "Large DOM size"
+    optimizations:
+      - "Break up long tasks"
+      - "Defer non-critical JavaScript"
+      - "Use web workers"
+      - "Debounce/throttle handlers"
+      - "Optimize DOM size"
+
+  cls:
+    name: "Cumulative Layout Shift"
+    description: "Visual stability - unexpected layout shifts"
+    thresholds:
+      good: "≤ 0.1"
+      needs_improvement: "0.1 - 0.25"
+      poor: "> 0.25"
+    causes:
+      - "Images without dimensions"
+      - "Ads, embeds without space"
+      - "Dynamically injected content"
+      - "Web fonts causing FOIT/FOUT"
+    optimizations:
+      - "Always set width/height on images"
+      - "Reserve space for dynamic content"
+      - "Use font-display: swap"
+      - "Avoid inserting content above existing"
+
+lighthouse_categories:
+  performance:
+    weight: 25%
+    metrics:
+      - First Contentful Paint
+      - Largest Contentful Paint
+      - Total Blocking Time
+      - Cumulative Layout Shift
+      - Speed Index
+
+  accessibility:
+    weight: 25%
+    checks:
+      - Color contrast
+      - ARIA attributes
+      - Keyboard navigation
+      - Alt text for images
+      - Form labels
+
+  best_practices:
+    weight: 25%
+    checks:
+      - HTTPS usage
+      - Console errors
+      - Deprecated APIs
+      - Image aspect ratios
+      - Modern JavaScript
+
+  seo:
+    weight: 25%
+    checks:
+      - Meta description
+      - Title tag
+      - Valid robots.txt
+      - Canonical URL
+      - Structured data
+
+running_lighthouse:
+  chrome_devtools: |
+    1. Open Chrome DevTools (F12)
+    2. Go to "Lighthouse" tab
+    3. Select categories and device
+    4. Click "Analyze page load"
+
+  cli: |
+    # Install
+    npm install -g lighthouse
+
+    # Run audit
+    lighthouse https://example.com --output html --output-path report.html
+
+    # With specific categories
+    lighthouse https://example.com --only-categories=performance,accessibility
+
+    # Mobile vs Desktop
+    lighthouse https://example.com --preset=desktop
+    lighthouse https://example.com --preset=perf  # Performance only
+
+  ci_integration: |
+    npm install -D @lhci/cli
+
+    # lighthouserc.js
+    module.exports = {
+      ci: {
+        collect: {
+          url: ['http://localhost:3000'],
+          startServerCommand: 'npm run start',
+        },
+        assert: {
+          assertions: {
+            'categories:performance': ['error', { minScore: 0.9 }],
+            'categories:accessibility': ['error', { minScore: 0.9 }],
+            'largest-contentful-paint': ['error', { maxNumericValue: 2500 }],
+            'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
+          },
+        },
+        upload: {
+          target: 'temporary-public-storage',
+        },
+      },
+    };
+
+web_vitals_library:
+  installation: "npm install web-vitals"
+
+  usage: |
+    import { onCLS, onINP, onLCP, onFCP, onTTFB } from 'web-vitals';
+
+    function sendToAnalytics(metric) {
+      const body = JSON.stringify({
+        name: metric.name,
+        value: metric.value,
+        delta: metric.delta,
+        id: metric.id,
+        rating: metric.rating,  // 'good', 'needs-improvement', 'poor'
+      });
+
+      // Use navigator.sendBeacon for reliability
+      navigator.sendBeacon('/analytics', body);
+    }
+
+    // Report all metrics
+    onCLS(sendToAnalytics);
+    onINP(sendToAnalytics);
+    onLCP(sendToAnalytics);
+    onFCP(sendToAnalytics);
+    onTTFB(sendToAnalytics);
+
+  react_integration: |
+    // In your app entry point
+    import { onCLS, onINP, onLCP } from 'web-vitals';
+
+    export function reportWebVitals(onPerfEntry) {
+      if (onPerfEntry && onPerfEntry instanceof Function) {
+        onCLS(onPerfEntry);
+        onINP(onPerfEntry);
+        onLCP(onPerfEntry);
+      }
+    }
+
+    // Usage
+    reportWebVitals(console.log);
+
+performance_budgets:
+  json_format: |
+    // budget.json
+    [
+      {
+        "path": "/*",
+        "timings": [
+          { "metric": "interactive", "budget": 3500 },
+          { "metric": "first-contentful-paint", "budget": 1500 },
+          { "metric": "largest-contentful-paint", "budget": 2500 }
+        ],
+        "resourceSizes": [
+          { "resourceType": "script", "budget": 200 },
+          { "resourceType": "total", "budget": 500 }
+        ],
+        "resourceCounts": [
+          { "resourceType": "third-party", "budget": 10 }
+        ]
+      }
+    ]
+
+  lighthouse_budget: |
+    # In lighthouserc.js
+    assert: {
+      budgetsFile: './budget.json',
+    }
+
+monitoring_tools:
+  field_data:
+    - "Chrome User Experience Report (CrUX)"
+    - "PageSpeed Insights (uses CrUX)"
+    - "Search Console Core Web Vitals report"
+    - "Custom RUM solutions"
+
+  lab_data:
+    - "Lighthouse"
+    - "WebPageTest"
+    - "Chrome DevTools"
+
+  comparison: |
+    Field Data (RUM):
+    - Real users, real conditions
+    - Accurate representation
+    - Historical trends
+    - Geographic distribution
+
+    Lab Data:
+    - Controlled environment
+    - Reproducible
+    - Debugging-friendly
+    - Pre-production testing
+
+optimization_checklist:
+  lcp:
+    - "Preload hero image"
+    - "Use <link rel=preload> for critical fonts"
+    - "Optimize server response (TTFB < 800ms)"
+    - "Use CDN for static assets"
+    - "Implement critical CSS"
+
+  inp:
+    - "Keep JavaScript execution < 50ms per task"
+    - "Use requestIdleCallback for non-critical work"
+    - "Debounce scroll/resize handlers"
+    - "Virtualize long lists"
+    - "Use CSS animations over JavaScript"
+
+  cls:
+    - "Set explicit dimensions on images/videos"
+    - "Reserve space for ads/embeds"
+    - "Use font-display: swap or optional"
+    - "Avoid top-inserted content"
+    - "Use transform for animations"

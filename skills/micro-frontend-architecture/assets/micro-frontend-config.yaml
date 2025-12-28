@@ -1,0 +1,526 @@
+# Micro-Frontend Architecture Configuration
+# Module Federation and composition patterns
+
+module_federation:
+  webpack_host: |
+    // Host application webpack.config.js
+    const { ModuleFederationPlugin } = require('webpack').container;
+
+    module.exports = {
+      plugins: [
+        new ModuleFederationPlugin({
+          name: 'host',
+          remotes: {
+            // Static remote
+            products: 'products@http://localhost:3001/remoteEntry.js',
+            cart: 'cart@http://localhost:3002/remoteEntry.js',
+
+            // Dynamic remote (loaded at runtime)
+            // checkout: 'checkout@[checkoutUrl]/remoteEntry.js',
+          },
+          shared: {
+            react: { singleton: true, requiredVersion: '^18.0.0' },
+            'react-dom': { singleton: true, requiredVersion: '^18.0.0' },
+            'react-router-dom': { singleton: true },
+          },
+        }),
+      ],
+    };
+
+  webpack_remote: |
+    // Remote application webpack.config.js
+    const { ModuleFederationPlugin } = require('webpack').container;
+
+    module.exports = {
+      plugins: [
+        new ModuleFederationPlugin({
+          name: 'products',
+          filename: 'remoteEntry.js',
+          exposes: {
+            './ProductList': './src/components/ProductList',
+            './ProductDetail': './src/components/ProductDetail',
+            './store': './src/store',
+          },
+          shared: {
+            react: { singleton: true, requiredVersion: '^18.0.0' },
+            'react-dom': { singleton: true, requiredVersion: '^18.0.0' },
+            'react-router-dom': { singleton: true },
+          },
+        }),
+      ],
+    };
+
+  vite_host: |
+    // Host vite.config.ts
+    import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+    import federation from '@originjs/vite-plugin-federation';
+
+    export default defineConfig({
+      plugins: [
+        react(),
+        federation({
+          name: 'host',
+          remotes: {
+            products: 'http://localhost:5001/assets/remoteEntry.js',
+            cart: 'http://localhost:5002/assets/remoteEntry.js',
+          },
+          shared: ['react', 'react-dom', 'react-router-dom'],
+        }),
+      ],
+      build: {
+        modulePreload: false,
+        target: 'esnext',
+        minify: false,
+        cssCodeSplit: false,
+      },
+    });
+
+  vite_remote: |
+    // Remote vite.config.ts
+    import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+    import federation from '@originjs/vite-plugin-federation';
+
+    export default defineConfig({
+      plugins: [
+        react(),
+        federation({
+          name: 'products',
+          filename: 'remoteEntry.js',
+          exposes: {
+            './ProductList': './src/components/ProductList',
+            './ProductDetail': './src/components/ProductDetail',
+          },
+          shared: ['react', 'react-dom', 'react-router-dom'],
+        }),
+      ],
+      build: {
+        modulePreload: false,
+        target: 'esnext',
+        minify: false,
+        cssCodeSplit: false,
+      },
+    });
+
+dynamic_remotes:
+  runtime_loading: |
+    // Dynamic remote loading
+    async function loadRemote(url: string) {
+      const container = await loadScript(url);
+      await container.init(__webpack_share_scopes__.default);
+      return container;
+    }
+
+    function loadScript(url: string): Promise<Container> {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.type = 'text/javascript';
+        script.async = true;
+
+        script.onload = () => {
+          const container = window[url.split('/').pop().replace('.js', '')];
+          resolve(container);
+        };
+
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+  react_component: |
+    // DynamicRemote.tsx
+    import React, { lazy, Suspense, useState, useEffect } from 'react';
+
+    function loadComponent(scope: string, module: string) {
+      return async () => {
+        const container = window[scope];
+        await container.init(__webpack_share_scopes__.default);
+        const factory = await container.get(module);
+        return factory();
+      };
+    }
+
+    interface DynamicRemoteProps {
+      scope: string;
+      module: string;
+      url: string;
+      fallback?: React.ReactNode;
+      props?: Record<string, any>;
+    }
+
+    export function DynamicRemote({
+      scope,
+      module,
+      url,
+      fallback = <div>Loading...</div>,
+      props = {},
+    }: DynamicRemoteProps) {
+      const [Component, setComponent] = useState<React.LazyExoticComponent<any> | null>(null);
+
+      useEffect(() => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.async = true;
+
+        script.onload = () => {
+          const LazyComponent = lazy(loadComponent(scope, `./${module}`));
+          setComponent(() => LazyComponent);
+        };
+
+        document.head.appendChild(script);
+        return () => script.remove();
+      }, [scope, module, url]);
+
+      if (!Component) return fallback;
+
+      return (
+        <Suspense fallback={fallback}>
+          <Component {...props} />
+        </Suspense>
+      );
+    }
+
+shared_state:
+  custom_events: |
+    // Event bus for cross-app communication
+    class EventBus {
+      private events: Map<string, Set<Function>> = new Map();
+
+      on(event: string, callback: Function) {
+        if (!this.events.has(event)) {
+          this.events.set(event, new Set());
+        }
+        this.events.get(event)!.add(callback);
+
+        return () => this.events.get(event)?.delete(callback);
+      }
+
+      emit(event: string, data?: any) {
+        this.events.get(event)?.forEach(callback => callback(data));
+      }
+    }
+
+    // Singleton instance
+    export const eventBus = new EventBus();
+
+    // Usage in Host
+    eventBus.on('cart:updated', (items) => {
+      updateCartBadge(items.length);
+    });
+
+    // Usage in Remote
+    eventBus.emit('cart:updated', cartItems);
+
+  shared_store: |
+    // Shared store using Zustand
+    // shared-store/src/index.ts
+    import { create } from 'zustand';
+
+    interface User {
+      id: string;
+      name: string;
+      email: string;
+    }
+
+    interface SharedState {
+      user: User | null;
+      isAuthenticated: boolean;
+      setUser: (user: User | null) => void;
+    }
+
+    export const useSharedStore = create<SharedState>((set) => ({
+      user: null,
+      isAuthenticated: false,
+      setUser: (user) => set({
+        user,
+        isAuthenticated: !!user,
+      }),
+    }));
+
+    // Expose in Module Federation
+    exposes: {
+      './store': './src/store',
+    }
+
+    // Use in any micro-frontend
+    import { useSharedStore } from 'shared/store';
+
+    function UserProfile() {
+      const { user, isAuthenticated } = useSharedStore();
+      // ...
+    }
+
+  broadcast_channel: |
+    // Cross-tab/cross-frame communication
+    const channel = new BroadcastChannel('app-channel');
+
+    // Send message
+    channel.postMessage({
+      type: 'AUTH_STATE_CHANGED',
+      payload: { user: currentUser },
+    });
+
+    // Receive message
+    channel.onmessage = (event) => {
+      if (event.data.type === 'AUTH_STATE_CHANGED') {
+        updateAuthState(event.data.payload.user);
+      }
+    };
+
+routing:
+  host_routing: |
+    // Host App Router
+    import { BrowserRouter, Routes, Route } from 'react-router-dom';
+    import { Suspense, lazy } from 'react';
+
+    // Lazy load remote components
+    const ProductList = lazy(() => import('products/ProductList'));
+    const ProductDetail = lazy(() => import('products/ProductDetail'));
+    const Cart = lazy(() => import('cart/Cart'));
+    const Checkout = lazy(() => import('checkout/Checkout'));
+
+    function App() {
+      return (
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route
+              path="/products"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ProductList />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/products/:id"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ProductDetail />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/cart"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <Cart />
+                </Suspense>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      );
+    }
+
+  memory_router: |
+    // Remote apps use MemoryRouter for internal routing
+    // products/src/bootstrap.tsx
+    import { MemoryRouter, Routes, Route } from 'react-router-dom';
+
+    interface ProductsAppProps {
+      initialPath?: string;
+      onNavigate?: (path: string) => void;
+    }
+
+    export function ProductsApp({ initialPath = '/', onNavigate }: ProductsAppProps) {
+      return (
+        <MemoryRouter initialEntries={[initialPath]}>
+          <NavigationListener onNavigate={onNavigate} />
+          <Routes>
+            <Route path="/" element={<ProductList />} />
+            <Route path="/:id" element={<ProductDetail />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    }
+
+css_isolation:
+  css_modules: |
+    // Each micro-frontend uses CSS Modules
+    // products/src/ProductCard.module.css
+    .card {
+      border: 1px solid #ddd;
+      padding: 16px;
+    }
+
+    .title {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    // ProductCard.tsx
+    import styles from './ProductCard.module.css';
+
+    function ProductCard() {
+      return (
+        <div className={styles.card}>
+          <h3 className={styles.title}>Product</h3>
+        </div>
+      );
+    }
+
+  shadow_dom: |
+    // Using Shadow DOM for complete isolation
+    class MicroFrontendContainer extends HTMLElement {
+      connectedCallback() {
+        const shadow = this.attachShadow({ mode: 'open' });
+
+        // Load styles
+        const style = document.createElement('style');
+        style.textContent = `
+          :host {
+            display: block;
+          }
+          /* Scoped styles */
+        `;
+        shadow.appendChild(style);
+
+        // Mount React app
+        const container = document.createElement('div');
+        shadow.appendChild(container);
+        ReactDOM.render(<RemoteApp />, container);
+      }
+    }
+
+    customElements.define('mf-products', MicroFrontendContainer);
+
+  styled_components: |
+    // Each app has its own styled-components instance
+    // Namespace all styles with app prefix
+    import styled, { createGlobalStyle } from 'styled-components';
+
+    export const ProductsGlobalStyle = createGlobalStyle`
+      .products-app {
+        /* App-specific global styles */
+      }
+    `;
+
+    export const Card = styled.div`
+      border: 1px solid #ddd;
+      padding: 16px;
+    `;
+
+error_handling:
+  error_boundary: |
+    // Error boundary for remote loading failures
+    import React, { Component, ReactNode } from 'react';
+
+    interface Props {
+      children: ReactNode;
+      fallback?: ReactNode;
+      onError?: (error: Error) => void;
+    }
+
+    interface State {
+      hasError: boolean;
+      error: Error | null;
+    }
+
+    class RemoteErrorBoundary extends Component<Props, State> {
+      state: State = { hasError: false, error: null };
+
+      static getDerivedStateFromError(error: Error): State {
+        return { hasError: true, error };
+      }
+
+      componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+        console.error('Remote loading error:', error, errorInfo);
+        this.props.onError?.(error);
+      }
+
+      render() {
+        if (this.state.hasError) {
+          return this.props.fallback || (
+            <div className="remote-error">
+              <h3>Failed to load component</h3>
+              <p>{this.state.error?.message}</p>
+              <button onClick={() => this.setState({ hasError: false, error: null })}>
+                Retry
+              </button>
+            </div>
+          );
+        }
+
+        return this.props.children;
+      }
+    }
+
+  retry_logic: |
+    // Retry loading remote with exponential backoff
+    async function loadRemoteWithRetry(
+      url: string,
+      maxRetries = 3,
+      baseDelay = 1000
+    ): Promise<Container> {
+      let lastError: Error;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          return await loadRemote(url);
+        } catch (error) {
+          lastError = error as Error;
+          const delay = baseDelay * Math.pow(2, attempt);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+
+      throw lastError!;
+    }
+
+deployment:
+  independent: |
+    # Each micro-frontend has its own deployment pipeline
+    # .github/workflows/products.yml
+    name: Deploy Products MF
+
+    on:
+      push:
+        paths:
+          - 'apps/products/**'
+
+    jobs:
+      deploy:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v3
+
+          - name: Build
+            run: |
+              cd apps/products
+              npm ci
+              npm run build
+
+          - name: Deploy to CDN
+            run: |
+              aws s3 sync dist/ s3://mf-products/
+              aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"
+
+  versioning: |
+    // Version management for remotes
+    // manifest.json - served by each remote
+    {
+      "name": "products",
+      "version": "2.1.0",
+      "entry": "https://cdn.example.com/products/v2.1.0/remoteEntry.js",
+      "integrity": "sha384-..."
+    }
+
+    // Host fetches manifest and loads appropriate version
+    async function loadRemoteFromManifest(name: string) {
+      const manifest = await fetch(`https://api.example.com/manifests/${name}`);
+      const { entry, integrity } = await manifest.json();
+      return loadRemote(entry, { integrity });
+    }
+
+best_practices:
+  - "Keep shared dependencies to a minimum"
+  - "Use singleton for React to avoid multiple instances"
+  - "Implement proper error boundaries for remote loading"
+  - "Use CSS isolation strategy consistently"
+  - "Define clear API contracts between micro-frontends"
+  - "Monitor remote loading performance"
+  - "Implement graceful degradation"
+  - "Version your remotes properly"

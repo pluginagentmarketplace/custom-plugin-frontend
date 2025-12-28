@@ -1,0 +1,315 @@
+# Component Testing Library Configuration
+# User-centric testing patterns
+
+react_testing_library:
+  installation: "npm install -D @testing-library/react @testing-library/jest-dom @testing-library/user-event"
+
+  setup: |
+    // setupTests.ts
+    import '@testing-library/jest-dom';
+
+    // jest.config.js
+    module.exports = {
+      setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
+      testEnvironment: 'jsdom',
+    };
+
+queries:
+  priority: |
+    // Priority order (most accessible first)
+    1. getByRole          // ARIA roles
+    2. getByLabelText     // Form labels
+    3. getByPlaceholderText
+    4. getByText          // Text content
+    5. getByDisplayValue  // Form values
+    6. getByAltText       // Images
+    7. getByTitle
+    8. getByTestId        // Fallback
+
+  variants: |
+    // get* - Throws if not found
+    const button = screen.getByRole('button', { name: /submit/i });
+
+    // query* - Returns null if not found
+    const maybeButton = screen.queryByRole('button');
+
+    // find* - Returns Promise, waits for element
+    const asyncButton = await screen.findByRole('button');
+
+    // *AllBy - Returns array
+    const buttons = screen.getAllByRole('button');
+
+  examples: |
+    // By role (preferred)
+    screen.getByRole('button', { name: /submit/i });
+    screen.getByRole('textbox', { name: /email/i });
+    screen.getByRole('checkbox', { name: /agree/i });
+    screen.getByRole('link', { name: /home/i });
+    screen.getByRole('heading', { level: 1 });
+
+    // By label (forms)
+    screen.getByLabelText(/email address/i);
+
+    // By text
+    screen.getByText(/welcome/i);
+    screen.getByText((content, element) => {
+      return element.tagName === 'SPAN' && content.includes('welcome');
+    });
+
+    // By test id (fallback)
+    screen.getByTestId('custom-element');
+
+user_events:
+  setup: |
+    import userEvent from '@testing-library/user-event';
+
+    const user = userEvent.setup();
+
+  interactions: |
+    // Click
+    await user.click(screen.getByRole('button'));
+
+    // Type
+    await user.type(screen.getByRole('textbox'), 'Hello');
+
+    // Clear and type
+    await user.clear(screen.getByRole('textbox'));
+    await user.type(screen.getByRole('textbox'), 'New value');
+
+    // Select option
+    await user.selectOptions(screen.getByRole('combobox'), 'option-value');
+
+    // Checkbox
+    await user.click(screen.getByRole('checkbox'));
+
+    // Keyboard
+    await user.keyboard('{Enter}');
+    await user.keyboard('{Shift>}{Tab}{/Shift}');
+
+    // Hover
+    await user.hover(screen.getByRole('button'));
+    await user.unhover(screen.getByRole('button'));
+
+    // Tab navigation
+    await user.tab();
+
+test_examples:
+  basic_component: |
+    import { render, screen } from '@testing-library/react';
+    import userEvent from '@testing-library/user-event';
+    import { Counter } from './Counter';
+
+    describe('Counter', () => {
+      it('renders initial count', () => {
+        render(<Counter initialCount={5} />);
+
+        expect(screen.getByText(/count: 5/i)).toBeInTheDocument();
+      });
+
+      it('increments count on button click', async () => {
+        const user = userEvent.setup();
+        render(<Counter initialCount={0} />);
+
+        await user.click(screen.getByRole('button', { name: /increment/i }));
+
+        expect(screen.getByText(/count: 1/i)).toBeInTheDocument();
+      });
+    });
+
+  form_testing: |
+    import { render, screen, waitFor } from '@testing-library/react';
+    import userEvent from '@testing-library/user-event';
+    import { LoginForm } from './LoginForm';
+
+    describe('LoginForm', () => {
+      it('submits form with valid data', async () => {
+        const user = userEvent.setup();
+        const onSubmit = jest.fn();
+        render(<LoginForm onSubmit={onSubmit} />);
+
+        await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+        await user.type(screen.getByLabelText(/password/i), 'password123');
+        await user.click(screen.getByRole('button', { name: /login/i }));
+
+        await waitFor(() => {
+          expect(onSubmit).toHaveBeenCalledWith({
+            email: 'test@example.com',
+            password: 'password123',
+          });
+        });
+      });
+
+      it('shows validation errors', async () => {
+        const user = userEvent.setup();
+        render(<LoginForm onSubmit={jest.fn()} />);
+
+        await user.click(screen.getByRole('button', { name: /login/i }));
+
+        expect(await screen.findByText(/email is required/i)).toBeInTheDocument();
+      });
+    });
+
+  async_testing: |
+    it('loads and displays data', async () => {
+      render(<UserProfile userId="1" />);
+
+      // Wait for loading to finish
+      expect(screen.getByText(/loading/i)).toBeInTheDocument();
+
+      // Wait for data to appear
+      await waitFor(() => {
+        expect(screen.getByText(/john doe/i)).toBeInTheDocument();
+      });
+
+      // Or use findBy (combines getBy + waitFor)
+      expect(await screen.findByText(/john doe/i)).toBeInTheDocument();
+    });
+
+custom_render:
+  with_providers: |
+    // test-utils.tsx
+    import { render, RenderOptions } from '@testing-library/react';
+    import { ThemeProvider } from './ThemeContext';
+    import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+    const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
+      const queryClient = new QueryClient({
+        defaultOptions: {
+          queries: { retry: false },
+        },
+      });
+
+      return (
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </QueryClientProvider>
+      );
+    };
+
+    const customRender = (
+      ui: React.ReactElement,
+      options?: Omit<RenderOptions, 'wrapper'>
+    ) => render(ui, { wrapper: AllTheProviders, ...options });
+
+    export * from '@testing-library/react';
+    export { customRender as render };
+
+testing_hooks:
+  pattern: |
+    import { renderHook, act } from '@testing-library/react';
+    import { useCounter } from './useCounter';
+
+    describe('useCounter', () => {
+      it('increments counter', () => {
+        const { result } = renderHook(() => useCounter(0));
+
+        act(() => {
+          result.current.increment();
+        });
+
+        expect(result.current.count).toBe(1);
+      });
+
+      it('updates when props change', () => {
+        const { result, rerender } = renderHook(
+          ({ initialCount }) => useCounter(initialCount),
+          { initialProps: { initialCount: 0 } }
+        );
+
+        expect(result.current.count).toBe(0);
+
+        rerender({ initialCount: 10 });
+        expect(result.current.count).toBe(10);
+      });
+    });
+
+msw_integration:
+  setup: |
+    // mocks/handlers.ts
+    import { rest } from 'msw';
+
+    export const handlers = [
+      rest.get('/api/users', (req, res, ctx) => {
+        return res(
+          ctx.json([
+            { id: 1, name: 'John' },
+            { id: 2, name: 'Jane' },
+          ])
+        );
+      }),
+
+      rest.post('/api/users', async (req, res, ctx) => {
+        const body = await req.json();
+        return res(ctx.json({ id: 3, ...body }));
+      }),
+    ];
+
+    // mocks/server.ts
+    import { setupServer } from 'msw/node';
+    import { handlers } from './handlers';
+
+    export const server = setupServer(...handlers);
+
+    // setupTests.ts
+    beforeAll(() => server.listen());
+    afterEach(() => server.resetHandlers());
+    afterAll(() => server.close());
+
+  test_usage: |
+    import { server } from './mocks/server';
+    import { rest } from 'msw';
+
+    it('handles error response', async () => {
+      server.use(
+        rest.get('/api/users', (req, res, ctx) => {
+          return res(ctx.status(500));
+        })
+      );
+
+      render(<UserList />);
+
+      expect(await screen.findByText(/error loading/i)).toBeInTheDocument();
+    });
+
+vue_test_utils:
+  setup: |
+    // vitest.config.ts
+    export default defineConfig({
+      test: {
+        environment: 'jsdom',
+        globals: true,
+      },
+    });
+
+  example: |
+    import { mount } from '@vue/test-utils';
+    import Counter from './Counter.vue';
+
+    describe('Counter', () => {
+      it('increments count', async () => {
+        const wrapper = mount(Counter);
+
+        await wrapper.find('button').trigger('click');
+
+        expect(wrapper.text()).toContain('1');
+      });
+
+      it('emits event on click', async () => {
+        const wrapper = mount(Counter);
+
+        await wrapper.find('button').trigger('click');
+
+        expect(wrapper.emitted()).toHaveProperty('increment');
+      });
+    });
+
+best_practices:
+  - "Query by accessible roles first"
+  - "Test from user perspective"
+  - "Avoid testing implementation details"
+  - "Use userEvent over fireEvent"
+  - "Create custom render with providers"
+  - "Use MSW for API mocking"
+  - "Keep tests focused and isolated"

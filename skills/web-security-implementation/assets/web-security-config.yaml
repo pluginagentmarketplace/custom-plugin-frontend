@@ -1,0 +1,511 @@
+# Web Security Implementation Configuration
+# Security patterns and best practices
+
+xss_prevention:
+  input_sanitization: |
+    // DOMPurify for HTML sanitization
+    import DOMPurify from 'dompurify';
+
+    // Sanitize HTML before rendering
+    const cleanHTML = DOMPurify.sanitize(userInput, {
+      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br'],
+      ALLOWED_ATTR: ['href', 'target'],
+    });
+
+    // React dangerouslySetInnerHTML with sanitization
+    function SafeHTML({ html }: { html: string }) {
+      return (
+        <div
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(html),
+          }}
+        />
+      );
+    }
+
+  output_encoding: |
+    // Text content encoding (automatic in React)
+    function UserComment({ comment }: { comment: string }) {
+      // React automatically escapes this
+      return <p>{comment}</p>;
+    }
+
+    // URL encoding
+    const safeUrl = encodeURIComponent(userInput);
+    const link = `https://example.com/search?q=${safeUrl}`;
+
+    // Attribute encoding
+    const safeAttr = userInput
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+  dom_manipulation: |
+    // UNSAFE - vulnerable to XSS
+    element.innerHTML = userInput; // ❌ NEVER
+
+    // SAFE - use textContent or createTextNode
+    element.textContent = userInput; // ✅
+
+    // SAFE - create elements properly
+    const link = document.createElement('a');
+    link.textContent = userInput;
+    link.href = sanitizedUrl;
+    parent.appendChild(link); // ✅
+
+  react_specific: |
+    // React is safe by default
+    function SafeComponent({ userInput }) {
+      // Automatically escaped
+      return <div>{userInput}</div>;
+    }
+
+    // DANGEROUS - avoid unless necessary
+    function UnsafeComponent({ html }) {
+      // Only with sanitized HTML
+      return (
+        <div
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(html),
+          }}
+        />
+      );
+    }
+
+    // DANGEROUS - creating elements from user input
+    // Never use eval() or new Function() with user input
+    // Never use javascript: URLs
+
+cors_configuration:
+  express_setup: |
+    // Express CORS configuration
+    import cors from 'cors';
+
+    const corsOptions = {
+      origin: (origin, callback) => {
+        const allowedOrigins = [
+          'https://example.com',
+          'https://app.example.com',
+        ];
+
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+      maxAge: 86400, // 24 hours
+    };
+
+    app.use(cors(corsOptions));
+
+  preflight: |
+    // Handle preflight requests
+    app.options('*', cors(corsOptions));
+
+    // Or manually
+    app.options('/api/*', (req, res) => {
+      res.header('Access-Control-Allow-Origin', req.headers.origin);
+      res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE');
+      res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header('Access-Control-Max-Age', '86400');
+      res.sendStatus(204);
+    });
+
+  fetch_credentials: |
+    // Fetch with credentials
+    const response = await fetch('https://api.example.com/data', {
+      method: 'GET',
+      credentials: 'include', // Send cookies
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+csrf_protection:
+  token_pattern: |
+    // Server-side: Generate CSRF token
+    import crypto from 'crypto';
+
+    function generateCSRFToken(sessionId: string): string {
+      const secret = process.env.CSRF_SECRET;
+      return crypto
+        .createHmac('sha256', secret)
+        .update(sessionId)
+        .digest('hex');
+    }
+
+    // Middleware to verify CSRF token
+    function csrfProtection(req, res, next) {
+      const token = req.headers['x-csrf-token'] || req.body._csrf;
+      const expectedToken = generateCSRFToken(req.sessionID);
+
+      if (token !== expectedToken) {
+        return res.status(403).json({ error: 'Invalid CSRF token' });
+      }
+
+      next();
+    }
+
+  double_submit: |
+    // Double Submit Cookie Pattern
+    // Server sets a cookie
+    res.cookie('csrf', token, {
+      httpOnly: false, // Must be readable by JavaScript
+      secure: true,
+      sameSite: 'strict',
+    });
+
+    // Client sends same token in header
+    const csrfToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrf='))
+      ?.split('=')[1];
+
+    fetch('/api/data', {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': csrfToken,
+      },
+      body: JSON.stringify(data),
+    });
+
+  samesite_cookie: |
+    // SameSite cookie for CSRF protection
+    res.cookie('session', sessionId, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict', // or 'lax' for GET navigation
+      maxAge: 3600000,
+    });
+
+content_security_policy:
+  basic: |
+    // Basic CSP header
+    Content-Security-Policy:
+      default-src 'self';
+      script-src 'self' https://trusted-cdn.com;
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: https:;
+      font-src 'self' https://fonts.gstatic.com;
+      connect-src 'self' https://api.example.com;
+      frame-ancestors 'none';
+      base-uri 'self';
+      form-action 'self';
+
+  nextjs: |
+    // next.config.js
+    const securityHeaders = [
+      {
+        key: 'Content-Security-Policy',
+        value: `
+          default-src 'self';
+          script-src 'self' 'unsafe-eval' 'unsafe-inline';
+          style-src 'self' 'unsafe-inline';
+          img-src 'self' blob: data:;
+          font-src 'self';
+          connect-src 'self' https://api.example.com;
+        `.replace(/\n/g, ''),
+      },
+    ];
+
+    module.exports = {
+      async headers() {
+        return [
+          {
+            source: '/:path*',
+            headers: securityHeaders,
+          },
+        ];
+      },
+    };
+
+  nonce_based: |
+    // Nonce-based CSP (more secure than unsafe-inline)
+    // Server generates nonce per request
+    const nonce = crypto.randomBytes(16).toString('base64');
+
+    // Send in header
+    res.setHeader(
+      'Content-Security-Policy',
+      `script-src 'nonce-${nonce}' 'strict-dynamic';`
+    );
+
+    // Use in HTML
+    <script nonce="<%= nonce %>">
+      // Inline script allowed with matching nonce
+    </script>
+
+  report_only: |
+    // Test CSP without blocking
+    Content-Security-Policy-Report-Only:
+      default-src 'self';
+      report-uri /csp-report;
+
+    // Handle CSP reports
+    app.post('/csp-report', (req, res) => {
+      const report = req.body['csp-report'];
+      console.log('CSP Violation:', report);
+      res.sendStatus(204);
+    });
+
+security_headers:
+  comprehensive: |
+    // Helmet.js for Express
+    import helmet from 'helmet';
+
+    app.use(helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+        },
+      },
+      crossOriginEmbedderPolicy: true,
+      crossOriginOpenerPolicy: { policy: 'same-origin' },
+      crossOriginResourcePolicy: { policy: 'same-origin' },
+      dnsPrefetchControl: { allow: false },
+      frameguard: { action: 'deny' },
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      },
+      noSniff: true,
+      originAgentCluster: true,
+      permittedCrossDomainPolicies: { permittedPolicies: 'none' },
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      xssFilter: true,
+    }));
+
+  manual_headers: |
+    // Manual security headers
+    app.use((req, res, next) => {
+      // Prevent clickjacking
+      res.setHeader('X-Frame-Options', 'DENY');
+
+      // Prevent MIME type sniffing
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+
+      // Enable XSS filter
+      res.setHeader('X-XSS-Protection', '1; mode=block');
+
+      // HSTS - force HTTPS
+      res.setHeader(
+        'Strict-Transport-Security',
+        'max-age=31536000; includeSubDomains; preload'
+      );
+
+      // Control referrer information
+      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+      // Permissions policy
+      res.setHeader(
+        'Permissions-Policy',
+        'camera=(), microphone=(), geolocation=()'
+      );
+
+      next();
+    });
+
+secure_cookies:
+  best_practices: |
+    // Secure cookie configuration
+    res.cookie('session', sessionId, {
+      httpOnly: true,      // Prevent JavaScript access
+      secure: true,        // HTTPS only
+      sameSite: 'strict',  // CSRF protection
+      maxAge: 3600000,     // 1 hour
+      path: '/',           // Cookie path
+      domain: '.example.com', // Domain scope
+    });
+
+    // Clear cookie securely
+    res.clearCookie('session', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/',
+    });
+
+  cookie_prefixes: |
+    // __Secure- prefix (requires Secure flag)
+    res.cookie('__Secure-session', token, {
+      secure: true,
+      path: '/',
+    });
+
+    // __Host- prefix (most restrictive)
+    res.cookie('__Host-session', token, {
+      secure: true,
+      path: '/',
+      // Cannot set domain with __Host-
+    });
+
+jwt_security:
+  best_practices: |
+    // JWT creation with proper settings
+    import jwt from 'jsonwebtoken';
+
+    function createToken(user: User): string {
+      return jwt.sign(
+        {
+          sub: user.id,
+          email: user.email,
+          // Don't include sensitive data
+        },
+        process.env.JWT_SECRET,
+        {
+          algorithm: 'HS256',
+          expiresIn: '15m',      // Short-lived access token
+          issuer: 'example.com',
+          audience: 'example.com',
+        }
+      );
+    }
+
+    // Verification with all checks
+    function verifyToken(token: string): JWTPayload {
+      return jwt.verify(token, process.env.JWT_SECRET, {
+        algorithms: ['HS256'], // Prevent algorithm confusion
+        issuer: 'example.com',
+        audience: 'example.com',
+      });
+    }
+
+  storage: |
+    // Token storage strategies
+
+    // 1. HttpOnly Cookie (recommended for web)
+    // Server sets cookie, client doesn't handle token
+    res.cookie('token', jwt, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+    });
+
+    // 2. In-memory (for SPAs) - tokens cleared on page refresh
+    let accessToken: string | null = null;
+
+    function setToken(token: string) {
+      accessToken = token;
+    }
+
+    function getToken(): string | null {
+      return accessToken;
+    }
+
+    // 3. Avoid localStorage for sensitive tokens
+    // localStorage.setItem('token', jwt); // ❌ Vulnerable to XSS
+
+  refresh_tokens: |
+    // Refresh token rotation
+    interface TokenPair {
+      accessToken: string;
+      refreshToken: string;
+    }
+
+    async function refreshTokens(refreshToken: string): Promise<TokenPair> {
+      // Verify refresh token
+      const payload = jwt.verify(refreshToken, REFRESH_SECRET);
+
+      // Check if token is revoked
+      const isRevoked = await checkTokenRevoked(refreshToken);
+      if (isRevoked) throw new Error('Token revoked');
+
+      // Revoke old refresh token
+      await revokeToken(refreshToken);
+
+      // Generate new pair
+      const newAccessToken = generateAccessToken(payload.userId);
+      const newRefreshToken = generateRefreshToken(payload.userId);
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      };
+    }
+
+input_validation:
+  client_side: |
+    // Zod for runtime validation
+    import { z } from 'zod';
+
+    const UserSchema = z.object({
+      email: z.string().email(),
+      password: z.string().min(8).max(100),
+      name: z.string().min(1).max(50),
+      age: z.number().int().positive().optional(),
+    });
+
+    type User = z.infer<typeof UserSchema>;
+
+    function validateUser(data: unknown): User {
+      return UserSchema.parse(data);
+    }
+
+  sanitization: |
+    // Input sanitization utilities
+    function sanitizeString(input: string): string {
+      return input
+        .trim()
+        .replace(/[<>]/g, '') // Remove angle brackets
+        .slice(0, 1000); // Limit length
+    }
+
+    function sanitizeEmail(email: string): string {
+      return email.toLowerCase().trim();
+    }
+
+    function sanitizeFilename(filename: string): string {
+      return filename
+        .replace(/[^a-zA-Z0-9.-]/g, '_')
+        .replace(/\.{2,}/g, '.')
+        .slice(0, 255);
+    }
+
+subresource_integrity:
+  usage: |
+    <!-- CDN scripts with integrity -->
+    <script
+      src="https://cdn.example.com/library.js"
+      integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Generate hash -->
+    <!-- openssl dgst -sha384 -binary library.js | openssl base64 -A -->
+
+  dynamic_loading: |
+    // Load script with integrity check
+    async function loadScript(url: string, integrity: string): Promise<void> {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.integrity = integrity;
+        script.crossOrigin = 'anonymous';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Script load failed'));
+        document.head.appendChild(script);
+      });
+    }
+
+security_checklist:
+  - "Sanitize all user input before rendering"
+  - "Use Content-Security-Policy headers"
+  - "Implement proper CORS configuration"
+  - "Use CSRF tokens for state-changing requests"
+  - "Set secure cookie flags (httpOnly, secure, sameSite)"
+  - "Use HTTPS everywhere (HSTS)"
+  - "Validate and sanitize input on server"
+  - "Keep dependencies updated"
+  - "Use SRI for third-party scripts"
+  - "Implement proper authentication and authorization"
+  - "Log security events for monitoring"
+  - "Regular security audits"

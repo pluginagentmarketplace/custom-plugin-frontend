@@ -1,0 +1,285 @@
+# Code Quality Configuration
+# ESLint, Prettier, and tooling setup
+
+eslint_setup:
+  installation: |
+    npm install -D eslint @eslint/js typescript-eslint globals
+
+  flat_config: |
+    // eslint.config.js (ESLint 9+ flat config)
+    import js from '@eslint/js';
+    import tseslint from 'typescript-eslint';
+    import globals from 'globals';
+
+    export default tseslint.config(
+      js.configs.recommended,
+      ...tseslint.configs.recommended,
+      {
+        languageOptions: {
+          globals: {
+            ...globals.browser,
+            ...globals.node,
+          },
+          parserOptions: {
+            project: './tsconfig.json',
+          },
+        },
+        rules: {
+          '@typescript-eslint/no-unused-vars': ['error', {
+            argsIgnorePattern: '^_',
+            varsIgnorePattern: '^_',
+          }],
+          '@typescript-eslint/explicit-function-return-type': 'off',
+          '@typescript-eslint/no-explicit-any': 'warn',
+        },
+      },
+      {
+        ignores: ['dist/', 'node_modules/', '*.config.js'],
+      }
+    );
+
+  react_config: |
+    npm install -D eslint-plugin-react eslint-plugin-react-hooks
+
+    // eslint.config.js
+    import react from 'eslint-plugin-react';
+    import reactHooks from 'eslint-plugin-react-hooks';
+
+    export default [
+      // ... base config
+      {
+        plugins: {
+          react,
+          'react-hooks': reactHooks,
+        },
+        rules: {
+          'react/prop-types': 'off',
+          'react/react-in-jsx-scope': 'off',
+          'react-hooks/rules-of-hooks': 'error',
+          'react-hooks/exhaustive-deps': 'warn',
+        },
+        settings: {
+          react: { version: 'detect' },
+        },
+      },
+    ];
+
+prettier_setup:
+  installation: "npm install -D prettier eslint-config-prettier"
+
+  config: |
+    // prettier.config.js
+    export default {
+      semi: true,
+      singleQuote: true,
+      tabWidth: 2,
+      trailingComma: 'es5',
+      printWidth: 100,
+      bracketSpacing: true,
+      arrowParens: 'avoid',
+      endOfLine: 'lf',
+    };
+
+  ignore: |
+    // .prettierignore
+    dist
+    node_modules
+    coverage
+    *.min.js
+    pnpm-lock.yaml
+
+  eslint_integration: |
+    // eslint.config.js
+    import prettier from 'eslint-config-prettier';
+
+    export default [
+      // ... other configs
+      prettier,  // Must be last to disable conflicting rules
+    ];
+
+husky_lint_staged:
+  installation: |
+    npm install -D husky lint-staged
+    npx husky init
+
+  husky_config: |
+    // .husky/pre-commit
+    npx lint-staged
+
+  lint_staged_config: |
+    // package.json or lint-staged.config.js
+    {
+      "lint-staged": {
+        "*.{js,jsx,ts,tsx}": [
+          "eslint --fix",
+          "prettier --write"
+        ],
+        "*.{json,md,yml,yaml}": [
+          "prettier --write"
+        ],
+        "*.css": [
+          "stylelint --fix",
+          "prettier --write"
+        ]
+      }
+    }
+
+commitlint:
+  installation: |
+    npm install -D @commitlint/cli @commitlint/config-conventional
+
+  config: |
+    // commitlint.config.js
+    export default {
+      extends: ['@commitlint/config-conventional'],
+      rules: {
+        'type-enum': [
+          2,
+          'always',
+          [
+            'feat',     // New feature
+            'fix',      // Bug fix
+            'docs',     // Documentation
+            'style',    // Formatting
+            'refactor', // Code restructuring
+            'perf',     // Performance
+            'test',     // Tests
+            'build',    // Build system
+            'ci',       // CI/CD
+            'chore',    // Maintenance
+            'revert',   // Revert changes
+          ],
+        ],
+        'subject-case': [2, 'always', 'lower-case'],
+        'header-max-length': [2, 'always', 72],
+      },
+    };
+
+  husky_hook: |
+    // .husky/commit-msg
+    npx --no -- commitlint --edit $1
+
+typescript_strict:
+  config: |
+    // tsconfig.json
+    {
+      "compilerOptions": {
+        "strict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "strictBindCallApply": true,
+        "strictPropertyInitialization": true,
+        "noImplicitThis": true,
+        "useUnknownInCatchVariables": true,
+        "alwaysStrict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "exactOptionalPropertyTypes": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true,
+        "noImplicitOverride": true,
+        "noPropertyAccessFromIndexSignature": true
+      }
+    }
+
+stylelint:
+  installation: |
+    npm install -D stylelint stylelint-config-standard
+
+  config: |
+    // stylelint.config.js
+    export default {
+      extends: ['stylelint-config-standard'],
+      rules: {
+        'declaration-empty-line-before': null,
+        'no-descending-specificity': null,
+        'selector-class-pattern': '^[a-z][a-zA-Z0-9]*$',
+      },
+    };
+
+npm_scripts:
+  package_json: |
+    {
+      "scripts": {
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "typecheck": "tsc --noEmit",
+        "quality": "npm run typecheck && npm run lint && npm run format:check",
+        "prepare": "husky"
+      }
+    }
+
+vscode_settings:
+  config: |
+    // .vscode/settings.json
+    {
+      "editor.formatOnSave": true,
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "explicit"
+      },
+      "typescript.preferences.importModuleSpecifier": "relative",
+      "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      },
+      "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+
+  extensions: |
+    // .vscode/extensions.json
+    {
+      "recommendations": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "stylelint.vscode-stylelint",
+        "bradlc.vscode-tailwindcss"
+      ]
+    }
+
+ci_integration:
+  github_actions: |
+    name: Code Quality
+
+    on: [push, pull_request]
+
+    jobs:
+      quality:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+
+          - name: Setup Node.js
+            uses: actions/setup-node@v4
+            with:
+              node-version: '20'
+              cache: 'npm'
+
+          - run: npm ci
+
+          - name: Type Check
+            run: npm run typecheck
+
+          - name: Lint
+            run: npm run lint
+
+          - name: Format Check
+            run: npm run format:check
+
+          - name: Test
+            run: npm test
+
+best_practices:
+  - "Enable ESLint and Prettier in editor"
+  - "Use pre-commit hooks for enforcement"
+  - "Enable TypeScript strict mode"
+  - "Automate quality checks in CI/CD"
+  - "Use conventional commits"
+  - "Document custom rules"
+  - "Share configs across projects"

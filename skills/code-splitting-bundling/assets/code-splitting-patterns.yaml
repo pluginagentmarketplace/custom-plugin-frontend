@@ -1,0 +1,288 @@
+# Code Splitting Patterns
+# Optimize bundle sizes and load performance
+
+react_lazy_loading:
+  basic_syntax: |
+    import { lazy, Suspense } from 'react';
+
+    // Lazy load component
+    const Dashboard = lazy(() => import('./Dashboard'));
+
+    // Use with Suspense
+    function App() {
+      return (
+        <Suspense fallback={<Loading />}>
+          <Dashboard />
+        </Suspense>
+      );
+    }
+
+  route_based: |
+    import { lazy, Suspense } from 'react';
+    import { Routes, Route } from 'react-router-dom';
+
+    // Lazy load route components
+    const Home = lazy(() => import('./pages/Home'));
+    const About = lazy(() => import('./pages/About'));
+    const Dashboard = lazy(() => import('./pages/Dashboard'));
+    const Settings = lazy(() => import('./pages/Settings'));
+
+    function App() {
+      return (
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </Suspense>
+      );
+    }
+
+  named_exports: |
+    // For named exports, use intermediate file
+    // components/Dashboard/index.ts
+    export { Dashboard as default } from './Dashboard';
+
+    // Or use Promise.then
+    const Dashboard = lazy(() =>
+      import('./Dashboard').then(module => ({ default: module.Dashboard }))
+    );
+
+dynamic_imports:
+  basic: |
+    // Dynamic import creates separate chunk
+    const loadModule = async () => {
+      const module = await import('./heavy-module');
+      module.doSomething();
+    };
+
+  webpack_magic_comments: |
+    const Component = lazy(() => import(
+      /* webpackChunkName: "dashboard" */
+      /* webpackPrefetch: true */
+      './Dashboard'
+    ));
+
+    // Preload (high priority, current navigation)
+    import(/* webpackPreload: true */ './CriticalModule');
+
+    // Prefetch (low priority, future navigation)
+    import(/* webpackPrefetch: true */ './NextPageModule');
+
+  conditional_loading: |
+    // Load based on condition
+    async function loadFeature(featureName) {
+      if (featureName === 'analytics') {
+        const { Analytics } = await import('./features/Analytics');
+        return Analytics;
+      }
+      if (featureName === 'charts') {
+        const { Charts } = await import('./features/Charts');
+        return Charts;
+      }
+    }
+
+loading_strategies:
+  basic_fallback: |
+    <Suspense fallback={<div>Loading...</div>}>
+      <LazyComponent />
+    </Suspense>
+
+  skeleton_fallback: |
+    <Suspense fallback={<DashboardSkeleton />}>
+      <Dashboard />
+    </Suspense>
+
+  error_boundary: |
+    import { ErrorBoundary } from 'react-error-boundary';
+
+    <ErrorBoundary
+      fallback={<ErrorFallback />}
+      onError={(error) => logError(error)}
+    >
+      <Suspense fallback={<Loading />}>
+        <LazyComponent />
+      </Suspense>
+    </ErrorBoundary>
+
+  nested_suspense: |
+    <Suspense fallback={<PageSkeleton />}>
+      <Layout>
+        <Suspense fallback={<SidebarSkeleton />}>
+          <Sidebar />
+        </Suspense>
+        <Suspense fallback={<ContentSkeleton />}>
+          <Content />
+        </Suspense>
+      </Layout>
+    </Suspense>
+
+webpack_splitting:
+  split_chunks_config: |
+    optimization: {
+      splitChunks: {
+        chunks: 'all',
+        minSize: 20000,
+        maxSize: 244000,
+        minChunks: 1,
+        maxAsyncRequests: 30,
+        maxInitialRequests: 30,
+        cacheGroups: {
+          // Vendor chunk
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+            priority: 10,
+          },
+          // React ecosystem
+          react: {
+            test: /[\\/]node_modules[\\/](react|react-dom|react-router)[\\/]/,
+            name: 'react-vendor',
+            chunks: 'all',
+            priority: 20,
+          },
+          // UI library
+          ui: {
+            test: /[\\/]node_modules[\\/](@mui|antd|chakra)[\\/]/,
+            name: 'ui-vendor',
+            chunks: 'all',
+            priority: 15,
+          },
+          // Common chunks
+          common: {
+            minChunks: 2,
+            priority: -10,
+            reuseExistingChunk: true,
+          },
+        },
+      },
+      // Runtime chunk for caching
+      runtimeChunk: 'single',
+    }
+
+vite_splitting:
+  manual_chunks: |
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+            'ui-vendor': ['@mui/material', '@emotion/react'],
+            'utils': ['lodash-es', 'date-fns'],
+          },
+        },
+      },
+    }
+
+  function_based: |
+    manualChunks: (id) => {
+      if (id.includes('node_modules')) {
+        // React ecosystem
+        if (id.includes('react')) {
+          return 'react-vendor';
+        }
+        // Large libraries get own chunk
+        if (id.includes('lodash')) {
+          return 'lodash';
+        }
+        // Everything else in vendor
+        return 'vendor';
+      }
+    }
+
+prefetching_strategies:
+  link_prefetch: |
+    // Prefetch on hover
+    function NavLink({ to, children }) {
+      const handleMouseEnter = () => {
+        // Prefetch the route component
+        import(`./pages/${to}`);
+      };
+
+      return (
+        <Link to={to} onMouseEnter={handleMouseEnter}>
+          {children}
+        </Link>
+      );
+    }
+
+  intersection_observer: |
+    // Prefetch when element enters viewport
+    function usePrefetchOnVisible(importFn) {
+      const ref = useRef(null);
+
+      useEffect(() => {
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              importFn();
+              observer.disconnect();
+            }
+          },
+          { rootMargin: '100px' }
+        );
+
+        if (ref.current) {
+          observer.observe(ref.current);
+        }
+
+        return () => observer.disconnect();
+      }, [importFn]);
+
+      return ref;
+    }
+
+bundle_analysis:
+  webpack: |
+    // webpack.config.js
+    const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
+    plugins: [
+      new BundleAnalyzerPlugin({
+        analyzerMode: 'static',
+        reportFilename: 'bundle-report.html',
+        openAnalyzer: false,
+      }),
+    ]
+
+  vite: |
+    // vite.config.ts
+    import { visualizer } from 'rollup-plugin-visualizer';
+
+    plugins: [
+      visualizer({
+        filename: 'stats.html',
+        open: true,
+        gzipSize: true,
+        brotliSize: true,
+      }),
+    ]
+
+  commands:
+    npm: "npm run build -- --stats"
+    analyze: "npx source-map-explorer dist/**/*.js"
+
+performance_budgets:
+  webpack: |
+    performance: {
+      hints: 'error',
+      maxEntrypointSize: 250000,  // 250KB
+      maxAssetSize: 200000,       // 200KB
+    }
+
+  targets:
+    initial_bundle: "< 200KB gzipped"
+    async_chunks: "< 100KB each"
+    total_js: "< 500KB"
+
+best_practices:
+  - "Split by route for predictable chunks"
+  - "Keep initial bundle under 200KB"
+  - "Prefetch likely next routes"
+  - "Use Suspense boundaries strategically"
+  - "Monitor with bundle analyzer"
+  - "Set and enforce performance budgets"
+  - "Avoid over-splitting (too many requests)"

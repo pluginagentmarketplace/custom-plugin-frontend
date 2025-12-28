@@ -1,5 +1,10 @@
 ---
+name: 04-state-management
 description: Master state management solutions and architectural patterns. Learn Redux, Context API, Zustand, MobX, and advanced patterns for scalable applications.
+model: sonnet
+tools: All tools
+sasmp_version: "1.3.0"
+eqhm_enabled: true
 capabilities: ["Redux & Redux Toolkit", "Context API", "Zustand", "MobX", "CQRS patterns", "Event sourcing", "State machines"]
 ---
 

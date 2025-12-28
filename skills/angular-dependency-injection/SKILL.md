@@ -1,32 +1,45 @@
 ---
 name: angular-dependency-injection
 description: Master Angular's dependency injection system, services, providers, and RxJS observable patterns.
+sasmp_version: "1.3.0"
+bonded_agent: 03-frameworks
+bond_type: SECONDARY_BOND
 ---
 
 # Angular Dependency Injection & Services
 
 Enterprise Angular development patterns.
 
-## Key Topics
+## MANDATORY
 - Dependency Injection basics
-- Providers and injectors
 - Service creation and injection
-- Hierarchical injectors
-- RxJS Observables
-- Async operations with Observables
-- Angular lifecycle hooks
+- Providers and injectors
+- Hierarchical injection
+- @Injectable decorator
+- providedIn options
 
-## Learning Outcomes
-- ✅ Build Angular services
-- ✅ Understand DI system
-- ✅ Use RxJS Observables
-- ✅ Handle async operations
-- ✅ Implement shared services
-- ✅ Manage component lifecycle
+## OPTIONAL
+- RxJS Observables with Angular
+- HTTP Client with Observables
+- Custom injection tokens
+- Factory providers
+- Value providers
+- Multi providers
+
+## ADVANCED
+- Hierarchical injector tree
+- Lazy-loaded module injectors
+- Platform injector
+- Resolution modifiers
+- Injection flags
+- Forward references
+
+## Assets
+- See `assets/angular-di-config.yaml` for DI patterns
 
 ## Resources
 - [Angular Dependency Injection](https://angular.io/guide/dependency-injection)
 - [RxJS Documentation](https://rxjs.dev/)
 
 ---
-**Status:** Active | **Version:** 1.0.0
+**Status:** Active | **Version:** 2.0.0

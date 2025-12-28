@@ -1,0 +1,519 @@
+# PWA Configuration
+# Progressive Web App patterns and strategies
+
+web_app_manifest:
+  basic: |
+    {
+      "name": "My Progressive Web App",
+      "short_name": "MyPWA",
+      "description": "A description of what your app does",
+      "start_url": "/",
+      "display": "standalone",
+      "background_color": "#ffffff",
+      "theme_color": "#4285f4",
+      "orientation": "portrait-primary",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any maskable"
+        },
+        {
+          "src": "/icons/icon-512x512.png",
+          "sizes": "512x512",
+          "type": "image/png",
+          "purpose": "any maskable"
+        }
+      ]
+    }
+
+  advanced: |
+    {
+      "name": "Advanced PWA",
+      "short_name": "APWA",
+      "start_url": "/?source=pwa",
+      "scope": "/",
+      "display": "standalone",
+      "display_override": ["window-controls-overlay", "standalone"],
+      "categories": ["productivity", "utilities"],
+      "screenshots": [
+        {
+          "src": "/screenshots/home.png",
+          "sizes": "1280x720",
+          "type": "image/png",
+          "platform": "wide"
+        }
+      ],
+      "shortcuts": [
+        {
+          "name": "New Task",
+          "short_name": "Task",
+          "description": "Create a new task",
+          "url": "/new-task",
+          "icons": [{ "src": "/icons/task.png", "sizes": "96x96" }]
+        }
+      ],
+      "share_target": {
+        "action": "/share",
+        "method": "POST",
+        "enctype": "multipart/form-data",
+        "params": {
+          "title": "title",
+          "text": "text",
+          "url": "url",
+          "files": [
+            {
+              "name": "media",
+              "accept": ["image/*", "video/*"]
+            }
+          ]
+        }
+      }
+    }
+
+service_worker:
+  lifecycle: |
+    // Service Worker lifecycle
+    self.addEventListener('install', (event) => {
+      console.log('Service Worker installing...');
+      // Skip waiting to activate immediately
+      // self.skipWaiting();
+
+      event.waitUntil(
+        caches.open('v1').then((cache) => {
+          return cache.addAll([
+            '/',
+            '/index.html',
+            '/styles.css',
+            '/app.js',
+            '/offline.html'
+          ]);
+        })
+      );
+    });
+
+    self.addEventListener('activate', (event) => {
+      console.log('Service Worker activating...');
+
+      event.waitUntil(
+        caches.keys().then((cacheNames) => {
+          return Promise.all(
+            cacheNames
+              .filter((name) => name !== 'v1')
+              .map((name) => caches.delete(name))
+          );
+        })
+      );
+
+      // Take control of all pages immediately
+      // self.clients.claim();
+    });
+
+  registration: |
+    // Register Service Worker in main app
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register(
+            '/sw.js',
+            { scope: '/' }
+          );
+
+          console.log('SW registered:', registration.scope);
+
+          // Handle updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed') {
+                if (navigator.serviceWorker.controller) {
+                  // New version available
+                  showUpdateNotification();
+                }
+              }
+            });
+          });
+        } catch (error) {
+          console.error('SW registration failed:', error);
+        }
+      });
+    }
+
+caching_strategies:
+  cache_first: |
+    // Cache First - Good for static assets
+    self.addEventListener('fetch', (event) => {
+      event.respondWith(
+        caches.match(event.request).then((response) => {
+          return response || fetch(event.request);
+        })
+      );
+    });
+
+  network_first: |
+    // Network First - Good for dynamic content
+    self.addEventListener('fetch', (event) => {
+      event.respondWith(
+        fetch(event.request)
+          .then((response) => {
+            // Clone and cache the response
+            const responseClone = response.clone();
+            caches.open('dynamic').then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+            return response;
+          })
+          .catch(() => caches.match(event.request))
+      );
+    });
+
+  stale_while_revalidate: |
+    // Stale While Revalidate - Best of both worlds
+    self.addEventListener('fetch', (event) => {
+      event.respondWith(
+        caches.open('dynamic').then((cache) => {
+          return cache.match(event.request).then((cachedResponse) => {
+            const fetchPromise = fetch(event.request).then((networkResponse) => {
+              cache.put(event.request, networkResponse.clone());
+              return networkResponse;
+            });
+            return cachedResponse || fetchPromise;
+          });
+        })
+      );
+    });
+
+  cache_then_network: |
+    // Cache then Network - UI updates when network responds
+    // In main app:
+    let networkDataReceived = false;
+
+    // First, try cache
+    caches.match('/api/data').then((response) => {
+      if (!networkDataReceived && response) {
+        response.json().then((data) => {
+          updateUI(data);
+        });
+      }
+    });
+
+    // Then fetch from network
+    fetch('/api/data')
+      .then((response) => response.json())
+      .then((data) => {
+        networkDataReceived = true;
+        updateUI(data);
+        // Update cache
+        caches.open('api-cache').then((cache) => {
+          cache.put('/api/data', new Response(JSON.stringify(data)));
+        });
+      });
+
+workbox_integration:
+  basic_setup: |
+    // workbox-config.js
+    module.exports = {
+      globDirectory: 'dist/',
+      globPatterns: [
+        '**/*.{html,js,css,png,svg,jpg,gif,json,woff,woff2}'
+      ],
+      swDest: 'dist/sw.js',
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/api\.example\.com\//,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'api-cache',
+            networkTimeoutSeconds: 10,
+            expiration: {
+              maxEntries: 50,
+              maxAgeSeconds: 60 * 60 * 24 // 24 hours
+            }
+          }
+        },
+        {
+          urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'images',
+            expiration: {
+              maxEntries: 100,
+              maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+            }
+          }
+        }
+      ]
+    };
+
+  custom_sw: |
+    // Custom service worker with Workbox
+    import { precacheAndRoute } from 'workbox-precaching';
+    import { registerRoute } from 'workbox-routing';
+    import {
+      StaleWhileRevalidate,
+      CacheFirst,
+      NetworkFirst
+    } from 'workbox-strategies';
+    import { ExpirationPlugin } from 'workbox-expiration';
+    import { CacheableResponsePlugin } from 'workbox-cacheable-response';
+
+    // Precache static assets
+    precacheAndRoute(self.__WB_MANIFEST);
+
+    // Cache Google Fonts
+    registerRoute(
+      /^https:\/\/fonts\.googleapis\.com/,
+      new StaleWhileRevalidate({
+        cacheName: 'google-fonts-stylesheets'
+      })
+    );
+
+    // Cache API responses
+    registerRoute(
+      ({ url }) => url.pathname.startsWith('/api/'),
+      new NetworkFirst({
+        cacheName: 'api-cache',
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 100,
+            maxAgeSeconds: 60 * 60 // 1 hour
+          }),
+          new CacheableResponsePlugin({
+            statuses: [0, 200]
+          })
+        ]
+      })
+    );
+
+offline_support:
+  offline_page: |
+    // Serve offline page when network fails
+    self.addEventListener('fetch', (event) => {
+      if (event.request.mode === 'navigate') {
+        event.respondWith(
+          fetch(event.request).catch(() => {
+            return caches.match('/offline.html');
+          })
+        );
+      }
+    });
+
+  offline_indicator: |
+    // Detect online/offline status
+    window.addEventListener('online', () => {
+      updateOnlineStatus(true);
+      syncPendingData();
+    });
+
+    window.addEventListener('offline', () => {
+      updateOnlineStatus(false);
+    });
+
+    function updateOnlineStatus(isOnline) {
+      document.body.classList.toggle('offline', !isOnline);
+      const indicator = document.getElementById('connection-status');
+      indicator.textContent = isOnline ? 'Online' : 'Offline';
+    }
+
+push_notifications:
+  subscription: |
+    async function subscribeToPush() {
+      const registration = await navigator.serviceWorker.ready;
+
+      // Get VAPID public key from server
+      const response = await fetch('/api/push/vapid-public-key');
+      const vapidPublicKey = await response.text();
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+      });
+
+      // Send subscription to server
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription)
+      });
+
+      return subscription;
+    }
+
+  handling: |
+    // In service worker
+    self.addEventListener('push', (event) => {
+      const data = event.data?.json() ?? {};
+
+      const options = {
+        body: data.body,
+        icon: '/icons/notification-icon.png',
+        badge: '/icons/badge.png',
+        vibrate: [100, 50, 100],
+        data: {
+          url: data.url
+        },
+        actions: [
+          { action: 'open', title: 'Open' },
+          { action: 'dismiss', title: 'Dismiss' }
+        ]
+      };
+
+      event.waitUntil(
+        self.registration.showNotification(data.title, options)
+      );
+    });
+
+    self.addEventListener('notificationclick', (event) => {
+      event.notification.close();
+
+      if (event.action === 'open' || !event.action) {
+        event.waitUntil(
+          clients.openWindow(event.notification.data.url)
+        );
+      }
+    });
+
+background_sync:
+  basic: |
+    // Register sync
+    async function registerSync(tag) {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.sync.register(tag);
+    }
+
+    // In service worker
+    self.addEventListener('sync', (event) => {
+      if (event.tag === 'sync-messages') {
+        event.waitUntil(syncMessages());
+      }
+    });
+
+    async function syncMessages() {
+      const pendingMessages = await getPendingMessages();
+      await Promise.all(
+        pendingMessages.map(msg =>
+          fetch('/api/messages', {
+            method: 'POST',
+            body: JSON.stringify(msg)
+          })
+        )
+      );
+      await clearPendingMessages();
+    }
+
+  periodic_sync: |
+    // Periodic Background Sync (requires permission)
+    async function registerPeriodicSync() {
+      const status = await navigator.permissions.query({
+        name: 'periodic-background-sync'
+      });
+
+      if (status.state === 'granted') {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.periodicSync.register('update-content', {
+          minInterval: 24 * 60 * 60 * 1000 // 24 hours
+        });
+      }
+    }
+
+    // In service worker
+    self.addEventListener('periodicsync', (event) => {
+      if (event.tag === 'update-content') {
+        event.waitUntil(updateContent());
+      }
+    });
+
+install_prompt:
+  handling: |
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent automatic prompt
+      e.preventDefault();
+      // Store event for later use
+      deferredPrompt = e;
+      // Show custom install button
+      showInstallButton();
+    });
+
+    async function installApp() {
+      if (!deferredPrompt) return;
+
+      // Show browser prompt
+      deferredPrompt.prompt();
+
+      // Wait for user response
+      const { outcome } = await deferredPrompt.userChoice;
+
+      if (outcome === 'accepted') {
+        console.log('User accepted install');
+      } else {
+        console.log('User dismissed install');
+      }
+
+      deferredPrompt = null;
+      hideInstallButton();
+    }
+
+    // Detect if already installed
+    window.addEventListener('appinstalled', () => {
+      console.log('App was installed');
+      hideInstallButton();
+    });
+
+indexeddb:
+  basic_usage: |
+    // Open database
+    const dbPromise = new Promise((resolve, reject) => {
+      const request = indexedDB.open('MyDatabase', 1);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        const store = db.createObjectStore('items', { keyPath: 'id' });
+        store.createIndex('byDate', 'date');
+      };
+    });
+
+    // CRUD operations
+    async function addItem(item) {
+      const db = await dbPromise;
+      const tx = db.transaction('items', 'readwrite');
+      const store = tx.objectStore('items');
+      await store.add(item);
+    }
+
+    async function getItem(id) {
+      const db = await dbPromise;
+      const tx = db.transaction('items', 'readonly');
+      const store = tx.objectStore('items');
+      return store.get(id);
+    }
+
+  with_idb_library: |
+    import { openDB } from 'idb';
+
+    const db = await openDB('MyDatabase', 1, {
+      upgrade(db) {
+        db.createObjectStore('items', { keyPath: 'id' });
+      }
+    });
+
+    // Simple API
+    await db.put('items', { id: 1, name: 'Item 1' });
+    const item = await db.get('items', 1);
+    await db.delete('items', 1);
+    const allItems = await db.getAll('items');
+
+best_practices:
+  - "Always provide offline fallback page"
+  - "Use versioned cache names for updates"
+  - "Implement proper cache cleanup in activate event"
+  - "Show update notifications to users"
+  - "Test in various network conditions"
+  - "Use Lighthouse PWA audit"
+  - "Implement proper error handling"
+  - "Consider battery and data usage"

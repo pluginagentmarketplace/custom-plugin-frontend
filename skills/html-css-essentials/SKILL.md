@@ -1,55 +1,43 @@
 ---
 name: html-css-essentials
-description: Master HTML5 semantic markup and CSS layouts (Flexbox, Grid). Learn responsive design and accessibility best practices for modern web development.
+description: Master HTML5 semantic markup and CSS layouts (Flexbox, Grid) for responsive, accessible web development
+sasmp_version: "1.3.0"
+bonded_agent: 01-fundamentals
+bond_type: PRIMARY_BOND
 ---
 
 # HTML & CSS Essentials
 
-Master the foundational markup and styling languages that power the web. HTML5 provides semantic structure, CSS creates visual design and responsive layouts.
+## MANDATORY
+- HTML5 semantic elements (header, nav, main, article, section, footer)
+- CSS Box Model and display properties
+- Flexbox layout system
+- CSS Grid layout system
+- Responsive design with media queries
+- Mobile-first development approach
 
-## Learning Objectives
+## OPTIONAL
+- CSS Custom Properties (variables)
+- CSS animations and transitions
+- ARIA accessibility attributes
+- Form validation and styling
+- CSS pseudo-classes and pseudo-elements
+- Web fonts and typography
 
-- Create semantically correct HTML documents
-- Master CSS layout techniques (Flexbox, Grid)
-- Build responsive designs
-- Apply accessibility best practices
-- Optimize styling performance
+## ADVANCED
+- CSS Container Queries
+- CSS Subgrid
+- CSS Cascade Layers (@layer)
+- View Transitions API
+- CSS Scroll-driven animations
+- CSS Nesting
 
-## Key Topics
-
-### HTML5 Semantic Markup
-- Document structure (`<!DOCTYPE>`, `<html>`, `<head>`, `<body>`)
-- Semantic elements (`<header>`, `<nav>`, `<main>`, `<article>`, `<footer>`)
-- Forms and inputs with validation
-- Accessibility attributes (ARIA, alt text)
-- Data attributes and custom elements
-
-### CSS Fundamentals
-- Selectors and specificity
-- Box model and display properties
-- Units (px, em, rem, %, vw, vh)
-- Colors and gradients
-- Typography and fonts
-
-### Responsive Design
-- Mobile-first approach
-- Media queries and breakpoints
-- Flexible layouts
-- Responsive images
-- Touch-friendly interfaces
-
-### CSS Layouts
-- **Flexbox:** Flexible box model for 1D layouts
-- **CSS Grid:** 2D grid layouts
-- **Positioning:** Static, relative, absolute, fixed, sticky
-- **Modern layout tricks:** Subgrid, aspect-ratio
+## Assets
+- See `assets/html-css-config.yaml` for styling patterns
 
 ## Resources
-
 - [MDN: HTML Guide](https://developer.mozilla.org/en-US/docs/Learn/HTML)
 - [MDN: CSS Guide](https://developer.mozilla.org/en-US/docs/Learn/CSS)
-- [CSS-Tricks: Flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/)
-- [CSS-Tricks: Grid](https://css-tricks.com/snippets/css/complete-guide-grid/)
 
 ---
-**Status:** Active | **Version:** 1.0.0
+**Status:** Active | **Version:** 2.0.0

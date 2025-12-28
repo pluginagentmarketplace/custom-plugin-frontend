@@ -1,0 +1,216 @@
+# DOM Manipulation Patterns
+# Modern JavaScript DOM interaction
+
+selection_patterns:
+  single_element: |
+    // Modern selection
+    const element = document.querySelector('.my-class');
+    const byId = document.getElementById('my-id');
+
+    // Scope selection
+    const container = document.querySelector('.container');
+    const child = container.querySelector('.child');
+
+  multiple_elements: |
+    // NodeList (iterable)
+    const items = document.querySelectorAll('.item');
+    items.forEach(item => console.log(item));
+
+    // Convert to array for array methods
+    const itemsArray = [...document.querySelectorAll('.item')];
+    const filtered = itemsArray.filter(item => item.classList.contains('active'));
+
+element_manipulation:
+  content: |
+    // Text content (safe, no HTML parsing)
+    element.textContent = 'Hello World';
+
+    // HTML content (careful with user input!)
+    element.innerHTML = '<strong>Bold</strong>';
+
+    // Insert adjacent HTML
+    element.insertAdjacentHTML('beforeend', '<span>New</span>');
+
+  attributes: |
+    // Get/set attributes
+    element.getAttribute('data-id');
+    element.setAttribute('data-id', '123');
+    element.removeAttribute('data-id');
+
+    // Dataset API for data attributes
+    element.dataset.id = '123';  // sets data-id="123"
+    const id = element.dataset.id;
+
+    // Boolean attributes
+    element.disabled = true;
+    element.hidden = false;
+
+  classes: |
+    // ClassList API
+    element.classList.add('active', 'highlight');
+    element.classList.remove('inactive');
+    element.classList.toggle('visible');
+    element.classList.replace('old', 'new');
+
+    // Check class
+    if (element.classList.contains('active')) {
+      // do something
+    }
+
+  styles: |
+    // Inline styles
+    element.style.color = 'red';
+    element.style.backgroundColor = 'blue';
+
+    // CSS custom properties
+    element.style.setProperty('--my-color', 'green');
+
+    // Get computed styles
+    const styles = getComputedStyle(element);
+    const color = styles.getPropertyValue('color');
+
+event_handling:
+  basic_events: |
+    // Modern event listener
+    element.addEventListener('click', (event) => {
+      console.log('Clicked!', event.target);
+    });
+
+    // With options
+    element.addEventListener('click', handler, {
+      once: true,      // Auto-remove after first call
+      passive: true,   // Improve scroll performance
+      capture: false   // Bubble phase (default)
+    });
+
+    // Remove listener (need reference)
+    element.removeEventListener('click', handler);
+
+  event_delegation: |
+    // Handle events on parent for dynamic children
+    document.querySelector('.list').addEventListener('click', (event) => {
+      const item = event.target.closest('.list-item');
+      if (item) {
+        console.log('Item clicked:', item.dataset.id);
+      }
+    });
+
+  custom_events: |
+    // Create custom event
+    const customEvent = new CustomEvent('myEvent', {
+      detail: { message: 'Hello' },
+      bubbles: true,
+      cancelable: true
+    });
+
+    // Dispatch event
+    element.dispatchEvent(customEvent);
+
+    // Listen for custom event
+    element.addEventListener('myEvent', (event) => {
+      console.log(event.detail.message);
+    });
+
+creating_elements:
+  basic_creation: |
+    // Create element
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.textContent = 'Hello';
+
+    // Append to DOM
+    container.appendChild(div);
+
+    // Insert at specific position
+    container.insertBefore(div, referenceNode);
+    container.append(div, span);  // Multiple elements
+    container.prepend(div);       // At beginning
+
+  document_fragment: |
+    // Better performance for multiple elements
+    const fragment = document.createDocumentFragment();
+
+    items.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item.name;
+      fragment.appendChild(li);
+    });
+
+    // Single DOM update
+    list.appendChild(fragment);
+
+  template_element: |
+    // HTML Template
+    <template id="card-template">
+      <div class="card">
+        <h2 class="card-title"></h2>
+        <p class="card-body"></p>
+      </div>
+    </template>
+
+    // Clone and use template
+    const template = document.getElementById('card-template');
+    const clone = template.content.cloneNode(true);
+    clone.querySelector('.card-title').textContent = 'Title';
+    container.appendChild(clone);
+
+observers:
+  mutation_observer: |
+    // Watch for DOM changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach(mutation => {
+        console.log('DOM changed:', mutation.type);
+      });
+    });
+
+    observer.observe(element, {
+      childList: true,     // Child additions/removals
+      attributes: true,    // Attribute changes
+      characterData: true, // Text content changes
+      subtree: true        // Watch descendants
+    });
+
+    // Stop observing
+    observer.disconnect();
+
+  intersection_observer: |
+    // Watch for element visibility
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target); // Optional: stop watching
+        }
+      });
+    }, {
+      threshold: 0.1,    // 10% visible
+      rootMargin: '50px' // Trigger 50px before visible
+    });
+
+    document.querySelectorAll('.lazy').forEach(el => {
+      observer.observe(el);
+    });
+
+  resize_observer: |
+    // Watch for element size changes
+    const observer = new ResizeObserver((entries) => {
+      entries.forEach(entry => {
+        const { width, height } = entry.contentRect;
+        console.log(`Size: ${width}x${height}`);
+      });
+    });
+
+    observer.observe(element);
+
+performance_tips:
+  batch_updates:
+    - "Use DocumentFragment for multiple insertions"
+    - "Read all measurements before writing"
+    - "Use requestAnimationFrame for visual changes"
+    - "Avoid layout thrashing (read/write cycles)"
+
+  memory_management:
+    - "Remove event listeners when done"
+    - "Use WeakMap for element metadata"
+    - "Clean up observers on unmount"
+    - "Avoid circular references"

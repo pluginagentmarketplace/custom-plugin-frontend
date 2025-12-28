@@ -1,32 +1,45 @@
 ---
 name: code-quality-linting
 description: Master ESLint, Prettier, TypeScript, and pre-commit hooks for code quality enforcement.
+sasmp_version: "1.3.0"
+bonded_agent: 05-testing
+bond_type: SECONDARY_BOND
 ---
 
 # Code Quality & Linting
 
 Maintain code standards across projects.
 
-## Key Topics
+## MANDATORY
 - ESLint configuration
 - Prettier formatting
-- TypeScript type safety
-- Pre-commit hooks (Husky)
-- Code coverage metrics
-- Best practices enforcement
-- CI/CD integration
+- TypeScript strict mode
+- Editor integration
+- npm scripts for linting
+- Basic rule configuration
 
-## Learning Outcomes
-- ✅ Configure ESLint
-- ✅ Set up Prettier
-- ✅ Use TypeScript effectively
-- ✅ Enforce standards
-- ✅ Monitor coverage
-- ✅ Integrate with CI/CD
+## OPTIONAL
+- Custom ESLint rules
+- Husky pre-commit hooks
+- lint-staged configuration
+- Stylelint for CSS
+- commitlint for commits
+- Shared configurations
+
+## ADVANCED
+- Custom ESLint plugins
+- Performance optimization
+- Monorepo configurations
+- CI/CD integration
+- Automated fixes
+- Migration strategies
+
+## Assets
+- See `assets/code-quality-config.yaml` for configurations
 
 ## Resources
 - [ESLint Documentation](https://eslint.org/)
 - [Prettier Documentation](https://prettier.io/)
 
 ---
-**Status:** Active | **Version:** 1.0.0
+**Status:** Active | **Version:** 2.0.0

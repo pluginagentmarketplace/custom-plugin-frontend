@@ -1,0 +1,317 @@
+# Angular Dependency Injection Patterns
+# Enterprise-grade DI configuration
+
+service_creation:
+  basic_service: |
+    import { Injectable } from '@angular/core';
+
+    @Injectable({
+      providedIn: 'root'  // Singleton, tree-shakeable
+    })
+    export class UserService {
+      private users: User[] = [];
+
+      getUsers(): User[] {
+        return this.users;
+      }
+
+      addUser(user: User): void {
+        this.users.push(user);
+      }
+    }
+
+  providedIn_options:
+    root: "Singleton for entire app (recommended)"
+    platform: "Shared across multiple apps"
+    any: "New instance for each lazy module"
+    module: "Provided in specific module"
+
+injection:
+  constructor_injection: |
+    import { Component } from '@angular/core';
+    import { UserService } from './user.service';
+
+    @Component({
+      selector: 'app-user-list',
+      template: `<ul><li *ngFor="let user of users">{{ user.name }}</li></ul>`
+    })
+    export class UserListComponent {
+      users: User[];
+
+      constructor(private userService: UserService) {
+        this.users = this.userService.getUsers();
+      }
+    }
+
+  inject_function: |
+    import { Component, inject } from '@angular/core';
+
+    @Component({ ... })
+    export class UserListComponent {
+      private userService = inject(UserService);
+      users = this.userService.getUsers();
+    }
+
+providers:
+  class_provider: |
+    @NgModule({
+      providers: [
+        UserService,  // Shorthand
+        { provide: UserService, useClass: UserService }  // Full syntax
+      ]
+    })
+
+  value_provider: |
+    const CONFIG = { apiUrl: 'https://api.example.com' };
+
+    @NgModule({
+      providers: [
+        { provide: 'API_CONFIG', useValue: CONFIG }
+      ]
+    })
+
+    // Usage
+    constructor(@Inject('API_CONFIG') private config: any) {}
+
+  factory_provider: |
+    export function loggerFactory(isDev: boolean) {
+      return isDev ? new ConsoleLogger() : new ProductionLogger();
+    }
+
+    @NgModule({
+      providers: [
+        {
+          provide: LoggerService,
+          useFactory: loggerFactory,
+          deps: ['IS_DEV']  // Dependencies for factory
+        }
+      ]
+    })
+
+  existing_provider: |
+    @NgModule({
+      providers: [
+        NewLoggerService,
+        { provide: OldLoggerService, useExisting: NewLoggerService }
+      ]
+    })
+
+injection_tokens:
+  definition: |
+    import { InjectionToken } from '@angular/core';
+
+    export interface AppConfig {
+      apiUrl: string;
+      production: boolean;
+    }
+
+    export const APP_CONFIG = new InjectionToken<AppConfig>('app.config');
+
+  registration: |
+    @NgModule({
+      providers: [
+        {
+          provide: APP_CONFIG,
+          useValue: {
+            apiUrl: 'https://api.example.com',
+            production: true
+          }
+        }
+      ]
+    })
+
+  usage: |
+    import { Inject } from '@angular/core';
+
+    constructor(@Inject(APP_CONFIG) private config: AppConfig) {
+      console.log(config.apiUrl);
+    }
+
+hierarchical_injection:
+  levels:
+    - "Platform injector (angular internals)"
+    - "Root injector (AppModule)"
+    - "Module injector (lazy modules)"
+    - "Component injector (component tree)"
+    - "Directive injector"
+
+  component_provider: |
+    @Component({
+      selector: 'app-user-editor',
+      providers: [UserService],  // New instance for this component
+      template: `...`
+    })
+    export class UserEditorComponent {
+      constructor(private userService: UserService) {}
+    }
+
+  viewProviders: |
+    @Component({
+      selector: 'app-parent',
+      viewProviders: [UserService],  // Only for view children, not content
+      template: `<ng-content></ng-content>`
+    })
+
+resolution_modifiers:
+  optional: |
+    constructor(@Optional() private logger?: LoggerService) {
+      // logger may be null if not provided
+    }
+
+  self: |
+    constructor(@Self() private userService: UserService) {
+      // Only look in this component's injector
+    }
+
+  skipSelf: |
+    constructor(@SkipSelf() private userService: UserService) {
+      // Skip this injector, look in parent
+    }
+
+  host: |
+    constructor(@Host() private userService: UserService) {
+      // Look up to host component only
+    }
+
+rxjs_with_angular:
+  http_service: |
+    import { Injectable } from '@angular/core';
+    import { HttpClient } from '@angular/common/http';
+    import { Observable, catchError, retry, map } from 'rxjs';
+
+    @Injectable({ providedIn: 'root' })
+    export class ApiService {
+      constructor(private http: HttpClient) {}
+
+      getUsers(): Observable<User[]> {
+        return this.http.get<User[]>('/api/users').pipe(
+          retry(3),
+          catchError(this.handleError)
+        );
+      }
+
+      getUser(id: string): Observable<User> {
+        return this.http.get<User>(`/api/users/${id}`);
+      }
+
+      createUser(user: Partial<User>): Observable<User> {
+        return this.http.post<User>('/api/users', user);
+      }
+
+      private handleError(error: HttpErrorResponse): Observable<never> {
+        console.error('API Error:', error);
+        return throwError(() => new Error('API error'));
+      }
+    }
+
+  component_subscription: |
+    @Component({ ... })
+    export class UserListComponent implements OnInit, OnDestroy {
+      users$: Observable<User[]>;
+      private destroy$ = new Subject<void>();
+
+      constructor(private apiService: ApiService) {}
+
+      ngOnInit(): void {
+        this.users$ = this.apiService.getUsers();
+
+        // Or with subscription management
+        this.apiService.getUsers().pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(users => {
+          this.users = users;
+        });
+      }
+
+      ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+      }
+    }
+
+  async_pipe: |
+    <ul>
+      <li *ngFor="let user of users$ | async">
+        {{ user.name }}
+      </li>
+    </ul>
+
+state_management:
+  behavior_subject: |
+    @Injectable({ providedIn: 'root' })
+    export class StateService {
+      private userSubject = new BehaviorSubject<User | null>(null);
+      user$ = this.userSubject.asObservable();
+
+      setUser(user: User): void {
+        this.userSubject.next(user);
+      }
+
+      clearUser(): void {
+        this.userSubject.next(null);
+      }
+    }
+
+  select_pattern: |
+    @Injectable({ providedIn: 'root' })
+    export class AppStateService {
+      private state = new BehaviorSubject<AppState>(initialState);
+
+      select<T>(selector: (state: AppState) => T): Observable<T> {
+        return this.state.pipe(
+          map(selector),
+          distinctUntilChanged()
+        );
+      }
+
+      setState(partial: Partial<AppState>): void {
+        this.state.next({ ...this.state.value, ...partial });
+      }
+    }
+
+testing:
+  service_test: |
+    import { TestBed } from '@angular/core/testing';
+
+    describe('UserService', () => {
+      let service: UserService;
+
+      beforeEach(() => {
+        TestBed.configureTestingModule({});
+        service = TestBed.inject(UserService);
+      });
+
+      it('should be created', () => {
+        expect(service).toBeTruthy();
+      });
+    });
+
+  mock_service: |
+    const mockUserService = jasmine.createSpyObj('UserService', ['getUsers']);
+    mockUserService.getUsers.and.returnValue(of([{ id: '1', name: 'Test' }]));
+
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: UserService, useValue: mockUserService }
+      ]
+    });
+
+  http_testing: |
+    import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+
+    beforeEach(() => {
+      TestBed.configureTestingModule({
+        imports: [HttpClientTestingModule],
+        providers: [ApiService]
+      });
+      httpMock = TestBed.inject(HttpTestingController);
+    });
+
+    it('should fetch users', () => {
+      service.getUsers().subscribe(users => {
+        expect(users.length).toBe(2);
+      });
+
+      const req = httpMock.expectOne('/api/users');
+      req.flush([{ id: '1' }, { id: '2' }]);
+    });

@@ -1,0 +1,234 @@
+# DevTools Profiling Configuration
+# Performance analysis and debugging patterns
+
+performance_panel:
+  recording: |
+    1. Open DevTools (F12)
+    2. Go to Performance tab
+    3. Click Record (or Ctrl+E)
+    4. Perform actions to profile
+    5. Click Stop
+    6. Analyze the results
+
+  flame_chart: |
+    Reading Flame Charts:
+    - X-axis: Time
+    - Y-axis: Call stack depth
+    - Width: Execution time
+    - Colors:
+      - Yellow: JavaScript
+      - Purple: Rendering (Style, Layout, Paint)
+      - Green: Painting
+      - Gray: System/Other
+
+    Look for:
+    - Wide bars (long tasks)
+    - Deep stacks (complex operations)
+    - Red triangles (warnings)
+
+  key_metrics:
+    FCP: "First Contentful Paint - first content rendered"
+    LCP: "Largest Contentful Paint - main content visible"
+    DCL: "DOMContentLoaded - DOM parsed"
+    L: "Load - all resources loaded"
+
+  long_tasks: |
+    Long Task = > 50ms on main thread
+    Blocks user interactions
+
+    Identification:
+    - Red corners in flame chart
+    - Performance.measure() markers
+    - Task attribution in chart
+
+    Solutions:
+    - Break into smaller chunks
+    - Use requestIdleCallback
+    - Move to Web Worker
+    - Defer non-critical work
+
+network_panel:
+  analysis: |
+    Key Information:
+    - Request timing (DNS, Connect, SSL, TTFB, Download)
+    - Resource size (actual vs transferred)
+    - Response headers
+    - Initiator chain
+
+  waterfall_colors:
+    white: "Queuing"
+    gray: "Stalled/Blocking"
+    light_green: "DNS Lookup"
+    orange: "Initial Connection"
+    light_purple: "SSL"
+    green: "Time to First Byte (TTFB)"
+    blue: "Content Download"
+
+  throttling: |
+    Presets:
+    - Fast 3G: 1.5 Mbps down, 750 Kbps up, 40ms RTT
+    - Slow 3G: 400 Kbps down, 400 Kbps up, 100ms RTT
+    - Offline: No network
+
+    Custom: Set specific download/upload/latency
+
+  filtering: |
+    Filter types:
+    - XHR/Fetch: API calls
+    - JS: JavaScript files
+    - CSS: Stylesheets
+    - Img: Images
+    - Media: Audio/Video
+    - Font: Web fonts
+    - Doc: HTML documents
+    - WS: WebSocket
+
+memory_panel:
+  heap_snapshots: |
+    1. Go to Memory tab
+    2. Select "Heap snapshot"
+    3. Click "Take snapshot"
+    4. Analyze object allocation
+
+    Views:
+    - Summary: Objects by constructor
+    - Comparison: Diff between snapshots
+    - Containment: Object hierarchy
+    - Statistics: Memory distribution
+
+  allocation_timeline: |
+    1. Select "Allocation instrumentation on timeline"
+    2. Record during suspected leak
+    3. Look for growing bars
+    4. Identify retained objects
+
+  detecting_memory_leaks: |
+    Pattern:
+    1. Take snapshot (baseline)
+    2. Perform suspected leaking action
+    3. Force garbage collection (trash icon)
+    4. Take another snapshot
+    5. Compare - look for growing objects
+
+    Common causes:
+    - Forgotten event listeners
+    - Detached DOM nodes
+    - Closures holding references
+    - Global variables
+    - Timers not cleared
+
+coverage_tool:
+  usage: |
+    1. Open DevTools
+    2. Press Cmd+Shift+P (Command Menu)
+    3. Type "Coverage" and select "Show Coverage"
+    4. Click reload button to start
+    5. Interact with page
+    6. Review unused code (red bars)
+
+  interpretation: |
+    Red: Unused code
+    Green: Used code
+
+    Actions:
+    - Code split unused modules
+    - Defer non-critical CSS
+    - Remove dead code
+    - Lazy load components
+
+rendering_panel:
+  paint_flashing: |
+    Shows areas being repainted
+    Green flashes = repaint occurring
+
+    Excessive repaints indicate:
+    - Layout thrashing
+    - Inefficient animations
+    - Scroll jank
+
+  layout_shift_regions: |
+    Highlights elements causing CLS
+    Blue rectangles show shifting content
+
+  layer_borders: |
+    Shows composited layers
+    Helps identify over-compositing
+
+performance_api:
+  marks_and_measures: |
+    // Mark specific points
+    performance.mark('start-operation');
+    // ... operation
+    performance.mark('end-operation');
+
+    // Measure between marks
+    performance.measure('operation-time', 'start-operation', 'end-operation');
+
+    // Get measurements
+    const measures = performance.getEntriesByType('measure');
+    console.log(measures);
+
+    // Clear marks
+    performance.clearMarks();
+    performance.clearMeasures();
+
+  observer: |
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        console.log(entry.name, entry.duration);
+      }
+    });
+
+    observer.observe({ entryTypes: ['measure', 'longtask'] });
+
+console_debugging:
+  timing: |
+    console.time('operation');
+    // ... operation
+    console.timeEnd('operation');
+    // Output: operation: 123.456ms
+
+  memory: |
+    console.memory
+    // {
+    //   totalJSHeapSize: 10000000,
+    //   usedJSHeapSize: 5000000,
+    //   jsHeapSizeLimit: 2000000000
+    // }
+
+  profiling: |
+    console.profile('MyProfile');
+    // ... code to profile
+    console.profileEnd('MyProfile');
+    // Opens in Profiler
+
+  table: |
+    console.table([
+      { name: 'John', age: 30 },
+      { name: 'Jane', age: 25 }
+    ]);
+
+debugging_workflow:
+  performance_issue: |
+    1. Record Performance trace
+    2. Identify long tasks in flame chart
+    3. Find specific function causing delay
+    4. Profile that code path
+    5. Implement optimization
+    6. Verify improvement
+
+  memory_issue: |
+    1. Take baseline heap snapshot
+    2. Reproduce the issue
+    3. Force GC and take another snapshot
+    4. Compare snapshots
+    5. Identify retained objects
+    6. Find and fix leak source
+
+  rendering_issue: |
+    1. Enable Paint Flashing
+    2. Enable Layout Shift Regions
+    3. Identify problematic elements
+    4. Check for layout thrashing
+    5. Optimize CSS/JavaScript
+    6. Use compositor-only properties

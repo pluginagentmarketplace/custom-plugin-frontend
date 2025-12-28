@@ -1,5 +1,10 @@
 ---
+name: 05-testing
 description: Master comprehensive testing strategies from unit to E2E. Learn Jest, Vitest, Cypress, Playwright, and code quality tools for production-ready applications.
+model: sonnet
+tools: All tools
+sasmp_version: "1.3.0"
+eqhm_enabled: true
 capabilities: ["Jest & Vitest", "React Testing Library", "Cypress E2E", "Playwright", "Code quality tools", "CI/CD integration", "Coverage analysis"]
 ---
 

@@ -1,0 +1,332 @@
+# Redux State Management Patterns
+# Predictable state with Redux Toolkit
+
+redux_toolkit_setup:
+  installation: "npm install @reduxjs/toolkit react-redux"
+
+  store_configuration: |
+    // store/index.ts
+    import { configureStore } from '@reduxjs/toolkit';
+    import userReducer from './userSlice';
+    import postsReducer from './postsSlice';
+
+    export const store = configureStore({
+      reducer: {
+        user: userReducer,
+        posts: postsReducer,
+      },
+      middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+          serializableCheck: false,  // Disable for non-serializable data
+        }),
+      devTools: process.env.NODE_ENV !== 'production',
+    });
+
+    export type RootState = ReturnType<typeof store.getState>;
+    export type AppDispatch = typeof store.dispatch;
+
+  provider_setup: |
+    // main.tsx
+    import { Provider } from 'react-redux';
+    import { store } from './store';
+
+    ReactDOM.createRoot(document.getElementById('root')!).render(
+      <Provider store={store}>
+        <App />
+      </Provider>
+    );
+
+slice_creation:
+  basic_slice: |
+    // store/counterSlice.ts
+    import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+    interface CounterState {
+      value: number;
+      status: 'idle' | 'loading' | 'failed';
+    }
+
+    const initialState: CounterState = {
+      value: 0,
+      status: 'idle',
+    };
+
+    export const counterSlice = createSlice({
+      name: 'counter',
+      initialState,
+      reducers: {
+        increment: (state) => {
+          state.value += 1;  // Immer handles immutability
+        },
+        decrement: (state) => {
+          state.value -= 1;
+        },
+        incrementByAmount: (state, action: PayloadAction<number>) => {
+          state.value += action.payload;
+        },
+        reset: (state) => {
+          state.value = 0;
+        },
+      },
+    });
+
+    export const { increment, decrement, incrementByAmount, reset } = counterSlice.actions;
+    export default counterSlice.reducer;
+
+  async_thunk: |
+    import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+
+    interface User {
+      id: string;
+      name: string;
+      email: string;
+    }
+
+    interface UsersState {
+      users: User[];
+      status: 'idle' | 'loading' | 'succeeded' | 'failed';
+      error: string | null;
+    }
+
+    export const fetchUsers = createAsyncThunk(
+      'users/fetchUsers',
+      async (_, { rejectWithValue }) => {
+        try {
+          const response = await fetch('/api/users');
+          if (!response.ok) throw new Error('Failed to fetch');
+          return await response.json();
+        } catch (error) {
+          return rejectWithValue(error.message);
+        }
+      }
+    );
+
+    const usersSlice = createSlice({
+      name: 'users',
+      initialState: { users: [], status: 'idle', error: null } as UsersState,
+      reducers: {},
+      extraReducers: (builder) => {
+        builder
+          .addCase(fetchUsers.pending, (state) => {
+            state.status = 'loading';
+          })
+          .addCase(fetchUsers.fulfilled, (state, action) => {
+            state.status = 'succeeded';
+            state.users = action.payload;
+          })
+          .addCase(fetchUsers.rejected, (state, action) => {
+            state.status = 'failed';
+            state.error = action.payload as string;
+          });
+      },
+    });
+
+typed_hooks:
+  setup: |
+    // store/hooks.ts
+    import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+    import type { RootState, AppDispatch } from './index';
+
+    export const useAppDispatch = () => useDispatch<AppDispatch>();
+    export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+
+  usage: |
+    import { useAppDispatch, useAppSelector } from '../store/hooks';
+    import { increment, selectCount } from '../store/counterSlice';
+
+    function Counter() {
+      const count = useAppSelector((state) => state.counter.value);
+      const dispatch = useAppDispatch();
+
+      return (
+        <div>
+          <span>{count}</span>
+          <button onClick={() => dispatch(increment())}>+</button>
+        </div>
+      );
+    }
+
+selectors:
+  basic_selectors: |
+    // In slice file
+    export const selectCount = (state: RootState) => state.counter.value;
+    export const selectStatus = (state: RootState) => state.counter.status;
+
+  reselect_memoization: |
+    import { createSelector } from '@reduxjs/toolkit';
+
+    const selectUsers = (state: RootState) => state.users.users;
+    const selectFilter = (state: RootState) => state.users.filter;
+
+    // Memoized selector - recalculates only when inputs change
+    export const selectFilteredUsers = createSelector(
+      [selectUsers, selectFilter],
+      (users, filter) => {
+        return users.filter(user =>
+          user.name.toLowerCase().includes(filter.toLowerCase())
+        );
+      }
+    );
+
+    // Parameterized selector
+    export const selectUserById = createSelector(
+      [selectUsers, (_, userId: string) => userId],
+      (users, userId) => users.find(user => user.id === userId)
+    );
+
+rtk_query:
+  api_setup: |
+    // store/api.ts
+    import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+
+    export const api = createApi({
+      reducerPath: 'api',
+      baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
+      tagTypes: ['User', 'Post'],
+      endpoints: (builder) => ({
+        getUsers: builder.query<User[], void>({
+          query: () => 'users',
+          providesTags: ['User'],
+        }),
+        getUserById: builder.query<User, string>({
+          query: (id) => `users/${id}`,
+          providesTags: (result, error, id) => [{ type: 'User', id }],
+        }),
+        createUser: builder.mutation<User, Partial<User>>({
+          query: (body) => ({
+            url: 'users',
+            method: 'POST',
+            body,
+          }),
+          invalidatesTags: ['User'],
+        }),
+        updateUser: builder.mutation<User, { id: string; body: Partial<User> }>({
+          query: ({ id, body }) => ({
+            url: `users/${id}`,
+            method: 'PATCH',
+            body,
+          }),
+          invalidatesTags: (result, error, { id }) => [{ type: 'User', id }],
+        }),
+      }),
+    });
+
+    export const {
+      useGetUsersQuery,
+      useGetUserByIdQuery,
+      useCreateUserMutation,
+      useUpdateUserMutation,
+    } = api;
+
+  store_integration: |
+    import { api } from './api';
+
+    export const store = configureStore({
+      reducer: {
+        [api.reducerPath]: api.reducer,
+        // other reducers
+      },
+      middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware().concat(api.middleware),
+    });
+
+  component_usage: |
+    function UserList() {
+      const { data: users, isLoading, error } = useGetUsersQuery();
+      const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
+
+      if (isLoading) return <div>Loading...</div>;
+      if (error) return <div>Error loading users</div>;
+
+      return (
+        <div>
+          <button onClick={() => createUser({ name: 'New User' })}>
+            {isCreating ? 'Creating...' : 'Add User'}
+          </button>
+          <ul>
+            {users?.map(user => (
+              <li key={user.id}>{user.name}</li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+
+entity_adapter:
+  setup: |
+    import { createSlice, createEntityAdapter } from '@reduxjs/toolkit';
+
+    const usersAdapter = createEntityAdapter<User>({
+      selectId: (user) => user.id,
+      sortComparer: (a, b) => a.name.localeCompare(b.name),
+    });
+
+    const usersSlice = createSlice({
+      name: 'users',
+      initialState: usersAdapter.getInitialState({
+        loading: false,
+      }),
+      reducers: {
+        addUser: usersAdapter.addOne,
+        addUsers: usersAdapter.addMany,
+        updateUser: usersAdapter.updateOne,
+        removeUser: usersAdapter.removeOne,
+        setAllUsers: usersAdapter.setAll,
+      },
+    });
+
+    // Selectors
+    export const {
+      selectAll: selectAllUsers,
+      selectById: selectUserById,
+      selectIds: selectUserIds,
+    } = usersAdapter.getSelectors((state: RootState) => state.users);
+
+middleware:
+  custom_middleware: |
+    import { Middleware } from '@reduxjs/toolkit';
+
+    const loggerMiddleware: Middleware = (store) => (next) => (action) => {
+      console.log('Dispatching:', action);
+      const result = next(action);
+      console.log('Next state:', store.getState());
+      return result;
+    };
+
+    // Add to store
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(loggerMiddleware)
+
+testing:
+  slice_testing: |
+    import counterReducer, { increment, decrement } from './counterSlice';
+
+    describe('counter reducer', () => {
+      it('should handle initial state', () => {
+        expect(counterReducer(undefined, { type: 'unknown' })).toEqual({
+          value: 0,
+          status: 'idle',
+        });
+      });
+
+      it('should handle increment', () => {
+        const actual = counterReducer({ value: 0, status: 'idle' }, increment());
+        expect(actual.value).toEqual(1);
+      });
+    });
+
+  thunk_testing: |
+    import { fetchUsers } from './usersSlice';
+
+    describe('fetchUsers thunk', () => {
+      it('should fetch users successfully', async () => {
+        const dispatch = jest.fn();
+        const getState = jest.fn();
+
+        await fetchUsers()(dispatch, getState, undefined);
+
+        expect(dispatch).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'users/fetchUsers/pending' })
+        );
+      });
+    });

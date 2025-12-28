@@ -1,0 +1,248 @@
+# Bundle Analysis Configuration
+# Tools and strategies for optimizing bundle sizes
+
+analysis_tools:
+  webpack_bundle_analyzer:
+    installation: "npm install -D webpack-bundle-analyzer"
+    config: |
+      const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
+      plugins: [
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',  // 'server', 'static', 'json', 'disabled'
+          reportFilename: 'bundle-report.html',
+          openAnalyzer: false,
+          generateStatsFile: true,
+          statsFilename: 'bundle-stats.json',
+        }),
+      ]
+
+    npm_scripts:
+      analyze: "webpack --profile --json > stats.json && npx webpack-bundle-analyzer stats.json"
+      analyze_server: "webpack-bundle-analyzer stats.json -m server -p 8888"
+
+  rollup_plugin_visualizer:
+    installation: "npm install -D rollup-plugin-visualizer"
+    vite_config: |
+      import { visualizer } from 'rollup-plugin-visualizer';
+
+      export default defineConfig({
+        plugins: [
+          visualizer({
+            filename: 'dist/stats.html',
+            open: true,
+            gzipSize: true,
+            brotliSize: true,
+            template: 'treemap',  // 'sunburst', 'network', 'raw-data'
+          }),
+        ],
+      });
+
+  source_map_explorer:
+    installation: "npm install -D source-map-explorer"
+    usage: "npx source-map-explorer dist/**/*.js"
+    npm_script: '"analyze": "source-map-explorer dist/**/*.js --html report.html"'
+
+  import_cost_vscode:
+    description: "VS Code extension showing import sizes inline"
+    settings: |
+      {
+        "importCost.smallPackageDarkColor": "#7cc36e",
+        "importCost.mediumPackageDarkColor": "#7cc36e",
+        "importCost.largePackageDarkColor": "#d44e40",
+        "importCost.mediumPackageSize": 50,
+        "importCost.largePackageSize": 100
+      }
+
+size_tracking:
+  bundlesize:
+    installation: "npm install -D bundlesize"
+    config: |
+      // package.json
+      {
+        "bundlesize": [
+          {
+            "path": "./dist/js/main.*.js",
+            "maxSize": "200 kB"
+          },
+          {
+            "path": "./dist/js/vendor.*.js",
+            "maxSize": "300 kB"
+          },
+          {
+            "path": "./dist/css/main.*.css",
+            "maxSize": "50 kB"
+          }
+        ]
+      }
+
+    npm_script: '"bundlesize": "bundlesize"'
+
+  size_limit:
+    installation: "npm install -D size-limit @size-limit/preset-app"
+    config: |
+      // .size-limit.json
+      [
+        {
+          "path": "dist/js/*.js",
+          "limit": "200 KB"
+        },
+        {
+          "name": "Main bundle",
+          "path": "dist/js/main.*.js",
+          "limit": "100 KB"
+        },
+        {
+          "name": "Vendor bundle",
+          "path": "dist/js/vendor.*.js",
+          "limit": "150 KB",
+          "gzip": true
+        }
+      ]
+
+    npm_scripts:
+      size: "size-limit"
+      size_why: "size-limit --why"
+
+tree_shaking:
+  verification: |
+    // Check if tree shaking works
+    // 1. Import specific function
+    import { debounce } from 'lodash-es';  // ✓ Tree shakeable
+
+    // 2. Avoid default imports of large libraries
+    import _ from 'lodash';  // ✗ Includes everything
+
+    // 3. Use ES modules version
+    import dayjs from 'dayjs';  // ✓ ES module
+    import moment from 'moment';  // ✗ CommonJS, not tree shakeable
+
+  sideEffects_config: |
+    // package.json
+    {
+      "sideEffects": false  // Pure ES modules, no side effects
+    }
+
+    // Or specify files with side effects
+    {
+      "sideEffects": [
+        "*.css",
+        "*.scss",
+        "./src/polyfills.js"
+      ]
+    }
+
+  webpack_config: |
+    module.exports = {
+      mode: 'production',
+      optimization: {
+        usedExports: true,
+        sideEffects: true,
+        minimize: true,
+      },
+    };
+
+dependency_analysis:
+  identify_large_deps: |
+    # Use bundle analyzer to identify
+    # Common large dependencies:
+    # - moment.js → replace with date-fns or dayjs
+    # - lodash → use lodash-es and specific imports
+    # - chart.js → consider lighter alternatives
+    # - pdf.js → lazy load when needed
+
+  replacement_strategies:
+    moment_to_dayjs:
+      before: "import moment from 'moment';"
+      after: "import dayjs from 'dayjs';"
+      savings: "~200KB → ~6KB"
+
+    lodash_optimization:
+      before: "import _ from 'lodash';"
+      after: "import debounce from 'lodash-es/debounce';"
+      or: "import { debounce } from 'lodash-es';"
+
+    uuid_lightweight:
+      before: "import { v4 as uuid } from 'uuid';"
+      after: "const uuid = () => crypto.randomUUID();"
+      savings: "~3KB → 0KB"
+
+ci_cd_integration:
+  github_actions: |
+    - name: Build
+      run: npm run build
+
+    - name: Analyze bundle
+      run: npm run analyze
+
+    - name: Check bundle size
+      uses: preactjs/compressed-size-action@v2
+      with:
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+        pattern: "./dist/**/*.{js,css}"
+
+  budget_enforcement: |
+    - name: Check size limits
+      run: npx size-limit
+      env:
+        CI: true
+
+    # Fails if size exceeds limit
+    # Posts PR comment with size diff
+
+performance_budgets:
+  targets:
+    initial_load:
+      js: "170KB gzipped"
+      css: "30KB gzipped"
+      total: "200KB gzipped"
+
+    async_chunks:
+      max_size: "100KB each"
+      total: "300KB"
+
+    time_to_interactive: "< 3.5s on 3G"
+
+  webpack_config: |
+    performance: {
+      hints: 'error',  // 'warning', 'error', false
+      maxEntrypointSize: 250000,
+      maxAssetSize: 200000,
+      assetFilter: (assetFilename) => {
+        return !/\.map$/.test(assetFilename);
+      },
+    }
+
+optimization_checklist:
+  analysis:
+    - "Run bundle analyzer"
+    - "Identify chunks > 100KB"
+    - "Find duplicate dependencies"
+    - "Check tree shaking effectiveness"
+    - "Review async chunk sizes"
+
+  quick_wins:
+    - "Replace moment with dayjs"
+    - "Use lodash-es with specific imports"
+    - "Lazy load heavy components"
+    - "Split vendor chunks"
+    - "Enable compression"
+
+  monitoring:
+    - "Set up size-limit in CI"
+    - "Track bundle size over time"
+    - "Alert on significant increases"
+    - "Review in PR comments"
+
+reports:
+  automated_report: |
+    # Generate comprehensive report
+    npm run build
+    npm run analyze
+
+    # Output includes:
+    # - Treemap visualization
+    # - Gzip/Brotli sizes
+    # - Chunk composition
+    # - Duplicate modules
+    # - Unused exports

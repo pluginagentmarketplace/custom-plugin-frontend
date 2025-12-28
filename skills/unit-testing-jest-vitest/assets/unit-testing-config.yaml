@@ -1,0 +1,279 @@
+# Unit Testing Configuration
+# Jest and Vitest patterns
+
+jest_setup:
+  installation: "npm install -D jest @types/jest ts-jest"
+
+  config: |
+    // jest.config.js
+    module.exports = {
+      preset: 'ts-jest',
+      testEnvironment: 'node',
+      roots: ['<rootDir>/src'],
+      testMatch: ['**/__tests__/**/*.ts', '**/*.test.ts'],
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/src/$1',
+      },
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+      collectCoverageFrom: [
+        'src/**/*.{ts,tsx}',
+        '!src/**/*.d.ts',
+      ],
+      coverageThreshold: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80,
+        },
+      },
+    };
+
+vitest_setup:
+  installation: "npm install -D vitest @vitest/coverage-v8"
+
+  config: |
+    // vite.config.ts
+    import { defineConfig } from 'vitest/config';
+
+    export default defineConfig({
+      test: {
+        globals: true,
+        environment: 'jsdom',
+        setupFiles: './src/test/setup.ts',
+        coverage: {
+          provider: 'v8',
+          reporter: ['text', 'html'],
+          exclude: ['node_modules/', 'src/test/'],
+        },
+        include: ['**/*.{test,spec}.{js,ts,tsx}'],
+      },
+    });
+
+test_structure:
+  basic: |
+    // sum.test.ts
+    import { sum } from './sum';
+
+    describe('sum', () => {
+      it('adds 1 + 2 to equal 3', () => {
+        expect(sum(1, 2)).toBe(3);
+      });
+
+      it('handles negative numbers', () => {
+        expect(sum(-1, 1)).toBe(0);
+      });
+
+      it('handles floating point', () => {
+        expect(sum(0.1, 0.2)).toBeCloseTo(0.3);
+      });
+    });
+
+  setup_teardown: |
+    describe('Database operations', () => {
+      let db: Database;
+
+      beforeAll(async () => {
+        // Run once before all tests
+        db = await connectDatabase();
+      });
+
+      afterAll(async () => {
+        // Run once after all tests
+        await db.close();
+      });
+
+      beforeEach(async () => {
+        // Run before each test
+        await db.clear();
+      });
+
+      afterEach(() => {
+        // Run after each test
+        jest.clearAllMocks();
+      });
+
+      it('should insert user', async () => {
+        await db.insert({ name: 'Test' });
+        const users = await db.findAll();
+        expect(users).toHaveLength(1);
+      });
+    });
+
+assertions:
+  common_matchers: |
+    // Equality
+    expect(value).toBe(3);                    // Strict equality
+    expect(value).toEqual({ a: 1 });          // Deep equality
+    expect(value).not.toBe(0);                // Negation
+
+    // Truthiness
+    expect(value).toBeNull();
+    expect(value).toBeDefined();
+    expect(value).toBeUndefined();
+    expect(value).toBeTruthy();
+    expect(value).toBeFalsy();
+
+    // Numbers
+    expect(value).toBeGreaterThan(3);
+    expect(value).toBeGreaterThanOrEqual(3);
+    expect(value).toBeLessThan(5);
+    expect(value).toBeCloseTo(0.3, 5);        // Float comparison
+
+    // Strings
+    expect(string).toMatch(/pattern/);
+    expect(string).toContain('substring');
+
+    // Arrays/Iterables
+    expect(array).toContain(item);
+    expect(array).toHaveLength(3);
+    expect(array).toContainEqual({ a: 1 });
+
+    // Objects
+    expect(object).toHaveProperty('key');
+    expect(object).toHaveProperty('key', 'value');
+    expect(object).toMatchObject({ a: 1 });
+
+    // Exceptions
+    expect(() => throwingFn()).toThrow();
+    expect(() => throwingFn()).toThrow(Error);
+    expect(() => throwingFn()).toThrow('error message');
+
+mocking:
+  function_mocks: |
+    // Jest
+    const mockFn = jest.fn();
+    const mockImpl = jest.fn((x) => x + 1);
+    const mockReturnValue = jest.fn().mockReturnValue(42);
+    const mockResolvedValue = jest.fn().mockResolvedValue({ data: [] });
+
+    // Vitest
+    const mockFn = vi.fn();
+    const mockImpl = vi.fn((x) => x + 1);
+
+    // Assertions
+    expect(mockFn).toHaveBeenCalled();
+    expect(mockFn).toHaveBeenCalledTimes(2);
+    expect(mockFn).toHaveBeenCalledWith('arg1', 'arg2');
+    expect(mockFn).toHaveReturnedWith(42);
+
+  module_mocks: |
+    // Jest - mock entire module
+    jest.mock('./api', () => ({
+      fetchUser: jest.fn().mockResolvedValue({ id: 1, name: 'Test' }),
+    }));
+
+    // Vitest
+    vi.mock('./api', () => ({
+      fetchUser: vi.fn().mockResolvedValue({ id: 1, name: 'Test' }),
+    }));
+
+    // Partial mock
+    jest.mock('./utils', () => ({
+      ...jest.requireActual('./utils'),
+      formatDate: jest.fn(() => '2024-01-01'),
+    }));
+
+  spy: |
+    const spy = jest.spyOn(object, 'method');
+    spy.mockImplementation(() => 'mocked');
+
+    // Restore original
+    spy.mockRestore();
+
+async_testing:
+  promises: |
+    // Using async/await
+    it('fetches user', async () => {
+      const user = await fetchUser(1);
+      expect(user.name).toBe('John');
+    });
+
+    // Using resolves/rejects
+    it('resolves to user', async () => {
+      await expect(fetchUser(1)).resolves.toEqual({ id: 1, name: 'John' });
+    });
+
+    it('rejects for invalid id', async () => {
+      await expect(fetchUser(-1)).rejects.toThrow('Invalid ID');
+    });
+
+  timers: |
+    // Jest
+    jest.useFakeTimers();
+
+    it('calls callback after 1 second', () => {
+      const callback = jest.fn();
+      setTimeout(callback, 1000);
+
+      jest.advanceTimersByTime(1000);
+
+      expect(callback).toHaveBeenCalled();
+    });
+
+    // Reset timers
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    // Vitest
+    vi.useFakeTimers();
+    vi.advanceTimersByTime(1000);
+    vi.useRealTimers();
+
+snapshot_testing:
+  basic: |
+    it('renders correctly', () => {
+      const tree = render(<Button>Click me</Button>);
+      expect(tree).toMatchSnapshot();
+    });
+
+  inline: |
+    it('renders button text', () => {
+      const { getByRole } = render(<Button>Click me</Button>);
+      expect(getByRole('button')).toMatchInlineSnapshot(`
+        <button>
+          Click me
+        </button>
+      `);
+    });
+
+  update: |
+    # Update snapshots
+    jest --updateSnapshot
+    vitest -u
+
+coverage:
+  commands:
+    jest: "jest --coverage"
+    vitest: "vitest --coverage"
+
+  report_types:
+    - text  # Console output
+    - html  # HTML report
+    - lcov  # For CI tools
+    - json  # Machine readable
+
+  thresholds: |
+    coverageThreshold: {
+      global: {
+        branches: 80,
+        functions: 80,
+        lines: 80,
+        statements: 80,
+      },
+      './src/critical/': {
+        branches: 100,
+        lines: 100,
+      },
+    }
+
+best_practices:
+  - "Test behavior, not implementation"
+  - "Keep tests independent"
+  - "Use descriptive test names"
+  - "Arrange-Act-Assert pattern"
+  - "Avoid testing framework internals"
+  - "Mock external dependencies"
+  - "Aim for 80%+ coverage"
+  - "Run tests in CI/CD"

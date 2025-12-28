@@ -1,0 +1,165 @@
+# Package Manager Configuration Patterns
+# NPM, Yarn, and PNPM best practices
+
+package_json_essentials:
+  required_fields:
+    - name: "kebab-case-name"
+    - version: "1.0.0"  # semver format
+    - description: "Clear package description"
+    - main: "dist/index.js"
+    - types: "dist/index.d.ts"  # For TypeScript
+    - scripts: {}
+    - dependencies: {}
+    - devDependencies: {}
+
+  recommended_fields:
+    - author: "name <email>"
+    - license: "MIT"
+    - repository: { type: "git", url: "" }
+    - engines: { node: ">=18.0.0" }
+    - files: ["dist", "README.md"]
+    - keywords: []
+
+common_scripts:
+  development:
+    dev: "vite"
+    start: "node dist/index.js"
+    watch: "tsc --watch"
+
+  building:
+    build: "tsc && vite build"
+    build:prod: "NODE_ENV=production npm run build"
+    clean: "rm -rf dist node_modules"
+
+  testing:
+    test: "vitest"
+    test:watch: "vitest --watch"
+    test:coverage: "vitest --coverage"
+    test:e2e: "playwright test"
+
+  quality:
+    lint: "eslint src --ext .ts,.tsx"
+    lint:fix: "eslint src --ext .ts,.tsx --fix"
+    format: "prettier --write ."
+    typecheck: "tsc --noEmit"
+
+  hooks:
+    prepare: "husky install"
+    prepublishOnly: "npm run build"
+
+version_strategies:
+  exact: "1.2.3"  # Exact version
+  patch: "~1.2.3"  # Allows patch updates (1.2.x)
+  minor: "^1.2.3"  # Allows minor updates (1.x.x)
+  latest: "*"  # Any version (not recommended)
+  range: ">=1.0.0 <2.0.0"  # Version range
+
+npm_commands:
+  installation:
+    - "npm install <package>"  # Production dep
+    - "npm install -D <package>"  # Dev dep
+    - "npm install -g <package>"  # Global
+    - "npm ci"  # Clean install from lock file
+
+  management:
+    - "npm outdated"  # Check for updates
+    - "npm update"  # Update packages
+    - "npm audit"  # Security check
+    - "npm audit fix"  # Auto-fix vulnerabilities
+    - "npm ls"  # List dependencies
+
+  publishing:
+    - "npm login"
+    - "npm publish"
+    - "npm version patch/minor/major"
+
+yarn_commands:
+  installation:
+    - "yarn add <package>"
+    - "yarn add -D <package>"
+    - "yarn global add <package>"
+    - "yarn install --frozen-lockfile"  # CI
+
+  workspaces:
+    - "yarn workspaces list"
+    - "yarn workspace <name> <command>"
+    - "yarn workspaces foreach <command>"
+
+pnpm_commands:
+  installation:
+    - "pnpm add <package>"
+    - "pnpm add -D <package>"
+    - "pnpm install --frozen-lockfile"
+
+  advantages:
+    - "Disk space efficient (hard links)"
+    - "Strict dependencies (no hoisting issues)"
+    - "Fast installation"
+    - "Built-in monorepo support"
+
+monorepo_setup:
+  npm_workspaces:
+    package_json: |
+      {
+        "workspaces": ["packages/*", "apps/*"]
+      }
+
+  yarn_workspaces:
+    package_json: |
+      {
+        "private": true,
+        "workspaces": {
+          "packages": ["packages/*"],
+          "nohoist": ["**/react-native"]
+        }
+      }
+
+  pnpm_workspace:
+    pnpm_workspace_yaml: |
+      packages:
+        - 'packages/*'
+        - 'apps/*'
+
+.npmrc_options:
+  common_settings: |
+    # Registry configuration
+    registry=https://registry.npmjs.org/
+
+    # Scoped package registry
+    @myorg:registry=https://npm.pkg.github.com/
+
+    # Save exact versions
+    save-exact=true
+
+    # Engine strict mode
+    engine-strict=true
+
+    # Auto-install peer dependencies
+    auto-install-peers=true
+
+    # Lockfile settings
+    package-lock=true
+
+security_best_practices:
+  - "Run npm audit regularly"
+  - "Use npm ci in CI/CD pipelines"
+  - "Lock dependencies with lockfiles"
+  - "Review dependency licenses"
+  - "Use dependabot or renovate for updates"
+  - "Verify package integrity with checksums"
+
+troubleshooting:
+  cache_issues:
+    npm: "npm cache clean --force"
+    yarn: "yarn cache clean"
+    pnpm: "pnpm store prune"
+
+  lock_conflicts:
+    - "Delete node_modules and lockfile"
+    - "Run fresh install"
+    - "Use --force flag if needed"
+
+  peer_dependencies:
+    - "Check npm ls for conflicts"
+    - "Install missing peers manually"
+    - "Use legacy-peer-deps flag if needed"

@@ -1,32 +1,45 @@
 ---
 name: web-vitals-lighthouse
 description: Master Core Web Vitals (LCP, INP, CLS) and Lighthouse for measuring and optimizing user experience.
+sasmp_version: "1.3.0"
+bonded_agent: 06-performance
+bond_type: PRIMARY_BOND
 ---
 
 # Web Vitals & Lighthouse
 
 User experience metrics and automated auditing.
 
-## Key Topics
+## MANDATORY
 - Core Web Vitals (LCP, INP, CLS)
-- Lighthouse scoring
+- Lighthouse scoring categories
+- Running Lighthouse audits
 - Performance budgets
-- Real User Monitoring (RUM)
-- Synthetic monitoring
-- Metrics tracking
-- Optimization targets
+- Metrics interpretation
+- Chrome DevTools integration
 
-## Learning Outcomes
-- ✅ Understand Web Vitals
-- ✅ Audit with Lighthouse
-- ✅ Set performance budgets
-- ✅ Track metrics
-- ✅ Identify bottlenecks
-- ✅ Measure improvements
+## OPTIONAL
+- Field data vs lab data
+- Real User Monitoring (RUM)
+- Web Vitals library
+- PageSpeed Insights
+- Performance API
+- Metric thresholds
+
+## ADVANCED
+- Custom metrics
+- Continuous monitoring
+- A/B testing performance
+- Third-party impact analysis
+- Performance regression detection
+- Enterprise monitoring solutions
+
+## Assets
+- See `assets/web-vitals-config.yaml` for monitoring patterns
 
 ## Resources
 - [Web Vitals Guide](https://web.dev/vitals/)
 - [Lighthouse Documentation](https://developers.google.com/web/tools/lighthouse)
 
 ---
-**Status:** Active | **Version:** 1.0.0
+**Status:** Active | **Version:** 2.0.0
