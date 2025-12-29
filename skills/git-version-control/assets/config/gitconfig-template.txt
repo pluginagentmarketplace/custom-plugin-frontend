@@ -1,0 +1,97 @@
+# Git Configuration Template for Frontend Development
+# Copy to ~/.gitconfig or use with: git config --global include.path /path/to/this/file
+
+[user]
+    name = Your Name
+    email = your.email@example.com
+
+[core]
+    editor = code --wait
+    autocrlf = input
+    ignorecase = false
+    excludesfile = ~/.gitignore_global
+
+[init]
+    defaultBranch = main
+
+[pull]
+    rebase = true
+
+[push]
+    default = current
+    autoSetupRemote = true
+
+[fetch]
+    prune = true
+
+[merge]
+    tool = vscode
+    conflictstyle = diff3
+
+[mergetool "vscode"]
+    cmd = code --wait $MERGED
+
+[diff]
+    tool = vscode
+    colorMoved = default
+
+[difftool "vscode"]
+    cmd = code --wait --diff $LOCAL $REMOTE
+
+[alias]
+    # Status shortcuts
+    st = status -sb
+    co = checkout
+    br = branch
+    ci = commit
+
+    # Logging
+    lg = log --oneline --graph --decorate -10
+    lga = log --oneline --graph --decorate --all -20
+    hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+
+    # Branching
+    new = checkout -b
+    del = branch -d
+
+    # Staging
+    aa = add --all
+    unstage = reset HEAD --
+
+    # Commit
+    amend = commit --amend --no-edit
+    undo = reset --soft HEAD^
+
+    # Stash
+    save = stash push -m
+    pop = stash pop
+
+    # Clean
+    cleanup = "!git branch --merged | grep -v '\\*\\|main\\|master\\|develop' | xargs -n 1 git branch -d"
+
+    # Show changed files
+    files = diff --name-only
+
+[color]
+    ui = auto
+    status = auto
+    branch = auto
+
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+
+[color "status"]
+    added = green
+    changed = yellow
+    untracked = red
+
+[credential]
+    helper = store
+
+[filter "lfs"]
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+    required = true

@@ -1,0 +1,171 @@
+{
+  "patterns": {
+    "mvc": {
+      "name": "Model-View-Controller",
+      "complexity": "low",
+      "bestFor": [
+        "traditional web applications",
+        "small to medium apps",
+        "server-rendered applications"
+      ],
+      "requiredDirectories": [
+        "models",
+        "views",
+        "controllers"
+      ],
+      "allowedPatterns": [
+        "*.model.ts",
+        "*.view.tsx",
+        "*.controller.ts"
+      ],
+      "forbiddenPatterns": [
+        "business logic in view",
+        "data access in controller",
+        "UI code in model"
+      ],
+      "validationRules": [
+        {
+          "rule": "Models must not import Views",
+          "priority": "critical",
+          "check": "no imports of view files in model files"
+        },
+        {
+          "rule": "Views must not contain business logic",
+          "priority": "critical",
+          "check": "max 50 lines per view component"
+        },
+        {
+          "rule": "Controllers must coordinate only",
+          "priority": "high",
+          "check": "controller methods delegate to model"
+        }
+      ]
+    },
+    "mvvm": {
+      "name": "Model-View-ViewModel",
+      "complexity": "medium",
+      "bestFor": [
+        "rich client applications",
+        "single page applications",
+        "real-time synchronization"
+      ],
+      "requiredDirectories": [
+        "models",
+        "viewmodels",
+        "views"
+      ],
+      "allowedPatterns": [
+        "*.model.ts",
+        "*.viewmodel.ts",
+        "*.view.tsx"
+      ],
+      "validationRules": [
+        {
+          "rule": "ViewModel exposes Observables",
+          "priority": "critical",
+          "check": "all public properties are Observable"
+        },
+        {
+          "rule": "View binds to ViewModel only",
+          "priority": "critical",
+          "check": "no direct model access in view"
+        },
+        {
+          "rule": "Model and ViewModel isolated",
+          "priority": "high",
+          "check": "Model doesn't depend on ViewModel"
+        }
+      ]
+    },
+    "clean-architecture": {
+      "name": "Clean Architecture",
+      "complexity": "high",
+      "bestFor": [
+        "large enterprise applications",
+        "long-term projects",
+        "complex business logic"
+      ],
+      "requiredDirectories": [
+        "entities",
+        "use-cases",
+        "interfaces",
+        "frameworks"
+      ],
+      "validationRules": [
+        {
+          "rule": "Dependency points inward",
+          "priority": "critical",
+          "check": "outer layers depend on inner layers only"
+        },
+        {
+          "rule": "Entities independent",
+          "priority": "critical",
+          "check": "no imports from other layers"
+        },
+        {
+          "rule": "Clear layer boundaries",
+          "priority": "high",
+          "check": "no cross-layer business logic"
+        }
+      ]
+    },
+    "ddd": {
+      "name": "Domain-Driven Design",
+      "complexity": "very-high",
+      "bestFor": [
+        "complex business domains",
+        "long-lived projects",
+        "enterprise applications"
+      ],
+      "requiredDirectories": [
+        "domain",
+        "application",
+        "infrastructure",
+        "presentation"
+      ],
+      "validationRules": [
+        {
+          "rule": "Aggregate root controls consistency",
+          "priority": "critical",
+          "check": "all state changes through aggregate root"
+        },
+        {
+          "rule": "Value objects immutable",
+          "priority": "critical",
+          "check": "no setters in value object classes"
+        },
+        {
+          "rule": "Ubiquitous language",
+          "priority": "high",
+          "check": "consistent terminology across codebase"
+        }
+      ]
+    }
+  },
+  "commonRules": {
+    "separationOfConcerns": {
+      "description": "Different modules for different concerns",
+      "examples": [
+        "business logic separate from UI",
+        "data access isolated in repositories",
+        "utilities in separate modules"
+      ]
+    },
+    "testability": {
+      "description": "Each layer independently testable",
+      "examples": [
+        "pure functions in business logic",
+        "interfaces for dependencies",
+        "mocks/stubs for external services"
+      ]
+    },
+    "consistency": {
+      "description": "Consistent patterns throughout",
+      "examples": [
+        "naming conventions",
+        "folder organization",
+        "dependency injection patterns"
+      ]
+    }
+  }
+}

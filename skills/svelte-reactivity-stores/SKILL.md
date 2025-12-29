@@ -2,7 +2,7 @@
 name: svelte-reactivity-stores
 description: Master Svelte's true reactivity, reactive declarations, stores, and animations with minimal boilerplate.
 sasmp_version: "1.3.0"
-bonded_agent: 03-frameworks
+bonded_agent: 03-frameworks-agent
 bond_type: SECONDARY_BOND
 ---
 

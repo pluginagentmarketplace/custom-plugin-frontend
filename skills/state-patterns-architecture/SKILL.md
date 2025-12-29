@@ -2,7 +2,7 @@
 name: state-patterns-architecture
 description: Master advanced state patterns including CQRS, Event Sourcing, and State Machines.
 sasmp_version: "1.3.0"
-bonded_agent: 04-state-management
+bonded_agent: 04-state-management-agent
 bond_type: SECONDARY_BOND
 ---
 

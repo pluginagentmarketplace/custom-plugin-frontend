@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Architecture Pattern Schema",
+  "description": "Validation schema for architectural patterns",
+  "type": "object",
+  "required": ["pattern", "layers", "rules"],
+  "properties": {
+    "pattern": {
+      "type": "string",
+      "enum": ["mvc", "mvvm", "clean-architecture", "ddd"],
+      "description": "Type of architectural pattern"
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "responsibilities", "dependencies"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Layer name"
+          },
+          "responsibilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What this layer does"
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Other layers it depends on"
+          },
+          "technologies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Recommended technologies"
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "description": "Architectural rules and constraints",
+      "properties": {
+        "separationOfConcerns": {
+          "type": "boolean",
+          "description": "Must enforce separation of concerns"
+        },
+        "dependencyFlow": {
+          "type": "string",
+          "description": "Direction of dependencies",
+          "enum": ["inward", "outward", "bidirectional"]
+        },
+        "testability": {
+          "type": "boolean",
+          "description": "Must be independently testable"
+        },
+        "coupling": {
+          "type": "string",
+          "enum": ["loose", "moderate", "tight"],
+          "description": "Acceptable coupling level"
+        }
+      }
+    },
+    "folderStructure": {
+      "type": "object",
+      "description": "Recommended folder organization",
+      "properties": {
+        "src": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

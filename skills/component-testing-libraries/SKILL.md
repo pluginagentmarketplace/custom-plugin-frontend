@@ -2,7 +2,7 @@
 name: component-testing-libraries
 description: Master React Testing Library, Vue Test Utils, and user-centric testing approaches.
 sasmp_version: "1.3.0"
-bonded_agent: 05-testing
+bonded_agent: 05-testing-agent
 bond_type: SECONDARY_BOND
 ---
 

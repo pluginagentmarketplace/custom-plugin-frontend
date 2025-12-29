@@ -2,7 +2,7 @@
 name: code-quality-linting
 description: Master ESLint, Prettier, TypeScript, and pre-commit hooks for code quality enforcement.
 sasmp_version: "1.3.0"
-bonded_agent: 05-testing
+bonded_agent: 05-testing-agent
 bond_type: SECONDARY_BOND
 ---
 

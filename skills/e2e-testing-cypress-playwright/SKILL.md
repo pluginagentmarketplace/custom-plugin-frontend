@@ -2,7 +2,7 @@
 name: e2e-testing-cypress-playwright
 description: Master end-to-end testing with Cypress and Playwright for complete user journey testing.
 sasmp_version: "1.3.0"
-bonded_agent: 05-testing
+bonded_agent: 05-testing-agent
 bond_type: SECONDARY_BOND
 ---
 

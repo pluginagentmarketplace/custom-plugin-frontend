@@ -2,7 +2,7 @@
 name: web-vitals-lighthouse
 description: Master Core Web Vitals (LCP, INP, CLS) and Lighthouse for measuring and optimizing user experience.
 sasmp_version: "1.3.0"
-bonded_agent: 06-performance
+bonded_agent: 06-performance-agent
 bond_type: PRIMARY_BOND
 ---
 

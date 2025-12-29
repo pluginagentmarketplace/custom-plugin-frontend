@@ -2,7 +2,7 @@
 name: unit-testing-jest-vitest
 description: Master Jest and Vitest for unit testing with mocking, assertions, and coverage reporting.
 sasmp_version: "1.3.0"
-bonded_agent: 05-testing
+bonded_agent: 05-testing-agent
 bond_type: PRIMARY_BOND
 ---
 

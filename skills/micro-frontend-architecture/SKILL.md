@@ -2,7 +2,7 @@
 name: micro-frontend-architecture
 description: Design and implement micro-frontend architecture with Module Federation, shared dependencies, and independent deployment.
 sasmp_version: "1.3.0"
-bonded_agent: 07-advanced-topics
+bonded_agent: 07-advanced-topics-agent
 bond_type: PRIMARY_BOND
 ---
 

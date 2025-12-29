@@ -2,7 +2,7 @@
 name: web-security-implementation
 description: Master CORS, XSS prevention, CSRF protection, CSP headers, and secure authentication patterns.
 sasmp_version: "1.3.0"
-bonded_agent: 07-advanced-topics
+bonded_agent: 07-advanced-topics-agent
 bond_type: PRIMARY_BOND
 ---
 

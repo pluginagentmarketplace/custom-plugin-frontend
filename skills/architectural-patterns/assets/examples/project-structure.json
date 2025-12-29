@@ -1,0 +1,236 @@
+{
+  "patterns": {
+    "mvc": {
+      "name": "MVC Project Structure",
+      "description": "Model-View-Controller folder organization",
+      "structure": {
+        "src/": {
+          "models/": {
+            "description": "Data and business logic",
+            "files": [
+              "User.ts",
+              "UserStore.ts",
+              "Product.ts",
+              "Order.ts"
+            ]
+          },
+          "views/": {
+            "description": "UI components",
+            "files": [
+              "UserList.tsx",
+              "UserForm.tsx",
+              "Dashboard.tsx"
+            ]
+          },
+          "controllers/": {
+            "description": "Coordination logic",
+            "files": [
+              "UserController.ts",
+              "ProductController.ts",
+              "OrderController.ts"
+            ]
+          },
+          "utils/": {
+            "description": "Helper functions",
+            "files": [
+              "validation.ts",
+              "formatting.ts"
+            ]
+          }
+        }
+      }
+    },
+    "mvvm": {
+      "name": "MVVM Project Structure",
+      "description": "Model-View-ViewModel folder organization",
+      "structure": {
+        "src/": {
+          "models/": {
+            "description": "Data models and services",
+            "files": [
+              "User.ts",
+              "UserService.ts",
+              "Product.ts"
+            ]
+          },
+          "viewmodels/": {
+            "description": "Presentation logic and observables",
+            "files": [
+              "UserViewModel.ts",
+              "ProductViewModel.ts",
+              "DashboardViewModel.ts"
+            ]
+          },
+          "views/": {
+            "description": "React components (pure presentation)",
+            "files": [
+              "UserView.tsx",
+              "ProductView.tsx",
+              "DashboardView.tsx"
+            ]
+          }
+        }
+      }
+    },
+    "clean-architecture": {
+      "name": "Clean Architecture Project Structure",
+      "description": "Layered architecture with clear boundaries",
+      "structure": {
+        "src/": {
+          "entities/": {
+            "description": "Core business rules (innermost)",
+            "files": [
+              "User.ts",
+              "UserRules.ts",
+              "Product.ts"
+            ]
+          },
+          "use-cases/": {
+            "description": "Application business rules",
+            "files": [
+              "CreateUser.ts",
+              "UpdateUser.ts",
+              "DeleteUser.ts"
+            ]
+          },
+          "interfaces/": {
+            "description": "Controllers, Presenters, Gateways",
+            "files": [
+              "UserController.ts",
+              "UserPresenter.ts",
+              "UserGateway.ts"
+            ]
+          },
+          "frameworks/": {
+            "description": "External interfaces (outermost)",
+            "subdirs": {
+              "web/": "Express/FastAPI",
+              "database/": "PostgreSQL/MongoDB",
+              "cache/": "Redis"
+            }
+          }
+        }
+      }
+    },
+    "ddd": {
+      "name": "DDD Project Structure",
+      "description": "Domain-Driven Design organization",
+      "structure": {
+        "src/": {
+          "domain/": {
+            "description": "Core domain logic",
+            "subdirs": {
+              "entities/": "Aggregate roots, entities",
+              "value-objects/": "Money, Email, OrderId",
+              "services/": "Domain services",
+              "repositories/": "Repository interfaces"
+            }
+          },
+          "application/": {
+            "description": "Use cases and application services",
+            "files": [
+              "CreateUserService.ts",
+              "UpdateUserService.ts",
+              "OrderService.ts"
+            ]
+          },
+          "infrastructure/": {
+            "description": "External service implementations",
+            "subdirs": {
+              "repositories/": "Database implementations",
+              "services/": "Email, payment services"
+            }
+          },
+          "presentation/": {
+            "description": "UI layer (controllers, views)",
+            "subdirs": {
+              "controllers/": "HTTP controllers",
+              "views/": "UI components"
+            }
+          }
+        }
+      }
+    }
+  },
+  "recommendations": {
+    "mvc": {
+      "when": "Simple to medium applications",
+      "benefits": [
+        "Easy to understand",
+        "Quick to develop",
+        "Good for small teams"
+      ],
+      "challenges": [
+        "Tight coupling grows",
+        "Complex for large apps",
+        "Difficult bidirectional binding"
+      ]
+    },
+    "mvvm": {
+      "when": "Rich client applications",
+      "benefits": [
+        "Two-way data binding",
+        "View independent of logic",
+        "Good for real-time updates"
+      ],
+      "challenges": [
+        "More boilerplate",
+        "Observable setup overhead",
+        "Steeper learning curve"
+      ]
+    },
+    "clean-architecture": {
+      "when": "Large, long-term projects",
+      "benefits": [
+        "Framework independent",
+        "Database agnostic",
+        "Highly testable",
+        "Clear structure"
+      ],
+      "challenges": [
+        "Initial complexity",
+        "More abstraction layers",
+        "Requires discipline"
+      ]
+    },
+    "ddd": {
+      "when": "Complex business domains",
+      "benefits": [
+        "Models real-world domains",
+        "Complex logic encapsulated",
+        "Business focus",
+        "Team alignment"
+      ],
+      "challenges": [
+        "Significant design effort",
+        "Requires domain expertise",
+        "Not for CRUD apps",
+        "High complexity"
+      ]
+    }
+  },
+  "selectionGuide": {
+    "projectSize": {
+      "small": "MVC",
+      "medium": "MVC or MVVM",
+      "large": "Clean Architecture or DDD"
+    },
+    "complexity": {
+      "low": "MVC",
+      "medium": "MVVM",
+      "high": "Clean Architecture",
+      "very-high": "DDD"
+    },
+    "team": {
+      "solo-developer": "MVC",
+      "small-team": "MVVM",
+      "large-team": "Clean Architecture",
+      "enterprise": "DDD"
+    },
+    "duration": {
+      "short-term": "MVC",
+      "medium-term": "MVVM",
+      "long-term": "Clean Architecture or DDD"
+    }
+  }
+}

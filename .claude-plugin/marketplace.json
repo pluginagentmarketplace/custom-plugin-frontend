@@ -1,0 +1,16 @@
+{
+  "name": "pluginagentmarketplace-frontend",
+  "owner": {
+    "name": "Dr. Umit Kacar & Muhsin Elcicek",
+    "email": "kacarumit.phd@gmail.com",
+    "url": "https://github.com/pluginagentmarketplace"
+  },
+  "plugins": [
+    {
+      "name": "frontend-development-assistant",
+      "source": "./",
+      "description": "Professional frontend development plugin with 7 agents and 41 skills covering HTML/CSS, JavaScript, React, Vue, Angular, Svelte, TypeScript, testing, performance, state management, PWA, SSR/SSG, and web security",
+      "version": "2.0.2"
+    }
+  ]
+}

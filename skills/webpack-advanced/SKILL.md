@@ -2,7 +2,7 @@
 name: webpack-advanced
 description: Master Webpack configuration, loaders, plugins, code splitting, and production optimization.
 sasmp_version: "1.3.0"
-bonded_agent: 02-build-tools
+bonded_agent: 02-build-tools-agent
 bond_type: SECONDARY_BOND
 ---
 

@@ -2,7 +2,7 @@
 name: code-splitting-bundling
 description: Implement route-based and component-based code splitting for optimal bundle sizes and load performance.
 sasmp_version: "1.3.0"
-bonded_agent: 02-build-tools
+bonded_agent: 02-build-tools-agent
 bond_type: SECONDARY_BOND
 ---
 

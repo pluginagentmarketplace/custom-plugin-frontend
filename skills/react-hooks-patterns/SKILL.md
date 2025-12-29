@@ -2,7 +2,7 @@
 name: react-hooks-patterns
 description: Master React Hooks (useState, useEffect, useContext, useReducer) and advanced Hook patterns for functional components.
 sasmp_version: "1.3.0"
-bonded_agent: 03-frameworks
+bonded_agent: 03-frameworks-agent
 bond_type: PRIMARY_BOND
 ---
 

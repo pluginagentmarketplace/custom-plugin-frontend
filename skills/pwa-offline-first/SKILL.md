@@ -2,7 +2,7 @@
 name: pwa-offline-first
 description: Build Progressive Web Apps with offline support, service workers, push notifications, and installation.
 sasmp_version: "1.3.0"
-bonded_agent: 07-advanced-topics
+bonded_agent: 07-advanced-topics-agent
 bond_type: PRIMARY_BOND
 ---
 

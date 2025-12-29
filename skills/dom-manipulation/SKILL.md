@@ -2,7 +2,7 @@
 name: dom-manipulation
 description: Master DOM selection, manipulation, event handling, and dynamic content creation for interactive web applications
 sasmp_version: "1.3.0"
-bonded_agent: 01-fundamentals
+bonded_agent: 01-fundamentals-agent
 bond_type: SECONDARY_BOND
 ---
 

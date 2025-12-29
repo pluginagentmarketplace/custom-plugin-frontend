@@ -2,7 +2,7 @@
 name: zustand-lightweight-state
 description: Master Zustand minimalist state management with stores, hooks, and middleware.
 sasmp_version: "1.3.0"
-bonded_agent: 04-state-management
+bonded_agent: 04-state-management-agent
 bond_type: SECONDARY_BOND
 ---
 

@@ -2,7 +2,7 @@
 name: asset-optimization
 description: Master image optimization, modern formats (WebP, AVIF), responsive images, and CDN strategies.
 sasmp_version: "1.3.0"
-bonded_agent: 06-performance
+bonded_agent: 06-performance-agent
 bond_type: SECONDARY_BOND
 ---
 

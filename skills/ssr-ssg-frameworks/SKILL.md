@@ -2,7 +2,7 @@
 name: ssr-ssg-frameworks
 description: Master Next.js, Nuxt, and SSR/SSG patterns for server-side rendering and static generation.
 sasmp_version: "1.3.0"
-bonded_agent: 07-advanced-topics
+bonded_agent: 07-advanced-topics-agent
 bond_type: PRIMARY_BOND
 ---
 

@@ -2,7 +2,7 @@
 name: vite-bundling
 description: Master Vite's modern bundling approach with ESM, HMR, and native performance optimizations.
 sasmp_version: "1.3.0"
-bonded_agent: 02-build-tools
+bonded_agent: 02-build-tools-agent
 bond_type: SECONDARY_BOND
 ---
 
