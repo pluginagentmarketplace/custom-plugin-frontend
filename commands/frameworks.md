@@ -1,3 +1,9 @@
+---
+name: frameworks
+description: /frameworks
+allowed-tools: Read
+---
+
 # /frameworks
 
 Master frontend frameworks: React, Vue, Angular, and Svelte.

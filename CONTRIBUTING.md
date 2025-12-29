@@ -1,253 +1,89 @@
-# Contributing to Frontend Development Assistant
+# Contributing to Frontend Plugin
 
-Thank you for your interest in contributing to the Frontend Development Assistant plugin! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to this Claude Code plugin!
 
-## Table of Contents
+## 📋 How to Contribute
 
-- [Code of Conduct](#code-of-conduct)
-- [How to Contribute](#how-to-contribute)
-- [Development Setup](#development-setup)
-- [Contribution Guidelines](#contribution-guidelines)
-- [Skill Template](#skill-template)
-- [Agent Template](#agent-template)
-- [Pull Request Process](#pull-request-process)
-- [Style Guide](#style-guide)
+1. **Fork** the repository
+2. **Create** your feature branch (`git checkout -b feature/amazing-feature`)
+3. **Follow** the Golden Format for new skills
+4. **Test** your changes thoroughly
+5. **Commit** your changes (`git commit -m 'feat: Add amazing feature'`)
+6. **Push** to the branch (`git push origin feature/amazing-feature`)
+7. **Open** a Pull Request
 
----
+## 📐 Guidelines
 
-## Code of Conduct
+### SASMP v1.3.0 Compliance
 
-By participating in this project, you agree to:
+All contributions must follow SASMP (Standardized Agent/Skill Metadata Protocol) v1.3.0:
 
-- Be respectful and inclusive
-- Provide constructive feedback
-- Focus on educational value and accuracy
-- Help maintain a welcoming community
+- Agents must include `sasmp_version: "1.3.0"` and `eqhm_enabled: true`
+- Skills must include `bonded_agent` and `bond_type` fields
+- Commands must have YAML frontmatter
 
----
-
-## How to Contribute
-
-### Types of Contributions
-
-1. **New Skills** - Add new skill modules to existing agents
-2. **Agent Improvements** - Enhance existing agent documentation
-3. **Code Examples** - Add production-ready code examples
-4. **Bug Fixes** - Fix errors in content or structure
-5. **Documentation** - Improve README, guides, or references
-6. **Translations** - Help translate content to other languages
-
-### Getting Started
-
-1. Fork the repository
-2. Clone your fork locally
-3. Create a feature branch
-4. Make your changes
-5. Test your changes
-6. Submit a pull request
-
----
-
-## Development Setup
-
-```bash
-# Clone your fork
-git clone https://github.com/YOUR-USERNAME/custom-plugin-frontend.git
-cd custom-plugin-frontend
-
-# Create a feature branch
-git checkout -b feature/your-feature-name
-
-# Validate plugin structure
-# (Use Claude Code plugin validation)
-/plugin validate ./
-```
-
----
-
-## Contribution Guidelines
-
-### Skill Contributions
-
-When adding or modifying skills:
-
-1. Follow the SASMP v1.3.0 specification
-2. Use the Golden Format structure (assets/, scripts/, references/)
-3. Include real, working code examples
-4. Add comprehensive references
-5. Bond skills to appropriate agents
-
-### Code Examples
-
-All code examples must be:
-
-- Production-ready (not toy examples)
-- Well-commented
-- Following current best practices (2025+ standards)
-- Security-conscious
-- Performance-optimized
-
-### Content Quality
-
-- Use clear, concise language
-- Include practical exercises
-- Provide real-world context
-- Reference official documentation
-- Include security considerations
-
----
-
-## Skill Template
-
-Use this structure for new skills:
-
-```
-skills/skill-name/
-├── SKILL.md              # Main skill documentation
-├── assets/               # Templates and configurations
-│   ├── templates/        # Code templates
-│   ├── config/           # Configuration files
-│   └── examples/         # Usage examples
-├── scripts/              # Utility scripts
-│   ├── validate.py       # Validation script
-│   └── setup.sh          # Setup script
-└── references/           # Documentation
-    ├── GUIDE.md          # Usage guide
-    └── PATTERNS.md       # Design patterns
-```
-
-### SKILL.md Frontmatter
-
-```yaml
----
-name: skill-name
-description: What this skill teaches
-sasmp_version: "1.3.0"
-bonded_agent: agent-name
-bond_type: PRIMARY_BOND
-keywords:
-  - keyword1
-  - keyword2
----
-```
-
----
-
-## Agent Template
-
-Agents should follow this structure:
+### Agent Development
 
 ```yaml
 ---
 name: agent-name
-description: What this agent specializes in
+description: Agent description
 model: sonnet
-tools: All tools
+tools: Read, Write, Bash
 sasmp_version: "1.3.0"
 eqhm_enabled: true
 ---
 ```
 
----
+### Skill Development (Golden Format)
 
-## Pull Request Process
-
-### Before Submitting
-
-- [ ] Run plugin validation
-- [ ] Check all links work
-- [ ] Verify code examples compile/run
-- [ ] Follow the style guide
-- [ ] Update relevant documentation
-- [ ] Add yourself to contributors (optional)
-
-### PR Title Format
-
-Use conventional commit style:
-
-- `feat: Add new skill for GraphQL patterns`
-- `fix: Correct TypeScript example in React skill`
-- `docs: Update installation instructions`
-- `refactor: Reorganize state management references`
-
-### PR Description Template
-
-```markdown
-## Description
-Brief description of changes
-
-## Type of Change
-- [ ] New skill
-- [ ] Agent improvement
-- [ ] Bug fix
-- [ ] Documentation update
-- [ ] Code example
-
-## Checklist
-- [ ] Plugin validates successfully
-- [ ] All examples are tested
-- [ ] Documentation is updated
-- [ ] Follows SASMP v1.3.0
+```
+skills/skill-name/
+├── SKILL.md          # Main skill definition
+├── assets/           # Templates, configs, schemas
+├── scripts/          # Automation scripts
+└── references/       # Documentation, guides
 ```
 
+SKILL.md frontmatter:
+```yaml
 ---
-
-## Style Guide
-
-### Markdown
-
-- Use ATX-style headers (`#`, `##`, `###`)
-- Include blank lines between sections
-- Use fenced code blocks with language identifiers
-- Use relative links for internal references
-
-### Code Examples
-
-```typescript
-// Good: Well-documented, production-ready
-interface UserState {
-  user: User | null;
-  loading: boolean;
-  error: Error | null;
-}
-
-// Include type annotations
-// Add error handling
-// Consider edge cases
+name: skill-name
+description: Skill description
+sasmp_version: "1.3.0"
+bonded_agent: agent-name
+bond_type: PRIMARY_BOND
+---
 ```
 
-### Naming Conventions
+### Command Development
 
-| Item | Convention | Example |
-|------|------------|---------|
-| Skills | kebab-case | `react-hooks-patterns` |
-| Agents | kebab-case | `state-management` |
-| Files | kebab-case | `validation-rules.json` |
-| Directories | kebab-case | `assets/templates/` |
+```yaml
+---
+name: command-name
+description: Command description
+allowed-tools: Read, Glob
+---
+```
+
+## ✅ Testing Requirements
+
+- Test all new features locally
+- Verify agent/skill bonding
+- Run `/plugin validate` before submitting
+- Ensure no E-code errors
+
+## 🔒 Code of Conduct
+
+- Be respectful and constructive
+- Follow existing code style
+- Document your changes
+- Test before submitting
+
+## ❓ Questions?
+
+Open an issue for any questions or suggestions.
 
 ---
 
-## Questions?
-
-- Open an issue for discussion
-- Tag with `question` label
-- Check existing issues first
-
----
-
-## Recognition
-
-Contributors are recognized in:
-
-- README.md Contributors section
-- Individual skill/agent acknowledgments
-- Release notes for significant contributions
-
----
-
-**Thank you for helping improve frontend education!**
-
----
-
-*Document Version: 1.0.0*
-*Last Updated: 2025-12-28*
+© 2025 Dr. Umit Kacar & Muhsin Elcicek. All Rights Reserved.

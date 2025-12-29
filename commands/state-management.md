@@ -1,3 +1,9 @@
+---
+name: state-management
+description: management
+allowed-tools: Read
+---
+
 # /state-management
 
 Master state management solutions: Redux, Context API, Zustand, and architectural patterns.

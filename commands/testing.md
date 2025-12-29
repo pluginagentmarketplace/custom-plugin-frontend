@@ -1,3 +1,9 @@
+---
+name: testing
+description: /testing
+allowed-tools: Read
+---
+
 # /testing
 
 Master testing strategies: Unit, Integration, E2E testing, and code quality.

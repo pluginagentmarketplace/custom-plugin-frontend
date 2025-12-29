@@ -1,3 +1,9 @@
+---
+name: build-tools
+description: tools
+allowed-tools: Read
+---
+
 # /build-tools
 
 Master package managers and build tools: NPM, Yarn, PNPM, Webpack, and Vite.

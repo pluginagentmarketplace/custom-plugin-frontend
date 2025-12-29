@@ -1,3 +1,9 @@
+---
+name: advanced-topics
+description: topics
+allowed-tools: Read
+---
+
 # /advanced-topics
 
 Master advanced frontend development: PWAs, Security, SSR/SSG, Micro-frontends, TypeScript.

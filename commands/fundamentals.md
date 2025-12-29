@@ -1,3 +1,9 @@
+---
+name: fundamentals
+description: /fundamentals
+allowed-tools: Read
+---
+
 # /fundamentals
 
 Learn frontend fundamentals: HTML, CSS, JavaScript, Git, DOM, and web basics.

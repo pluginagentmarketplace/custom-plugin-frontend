@@ -1,3 +1,9 @@
+---
+name: performance
+description: /performance
+allowed-tools: Read
+---
+
 # /performance
 
 Master web performance: Core Web Vitals, optimization, and DevTools.
