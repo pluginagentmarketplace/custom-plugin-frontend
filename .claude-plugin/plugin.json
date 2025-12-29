@@ -28,13 +28,13 @@
     "plugin"
   ],
   "agents": [
-    "./agents/fundamentals.md",
-    "./agents/build-tools.md",
+    "./agents/advanced-topics.md",
     "./agents/frameworks.md",
-    "./agents/state-management.md",
-    "./agents/testing.md",
+    "./agents/frontend-build-tools.md",
+    "./agents/frontend-fundamentals.md",
     "./agents/performance.md",
-    "./agents/advanced-topics.md"
+    "./agents/state-management.md",
+    "./agents/testing.md"
   ],
   "skills": [
     "./skills/angular-dependency-injection/SKILL.md",
@@ -80,13 +80,13 @@
     "./skills/zustand-minimalist/SKILL.md"
   ],
   "commands": [
-    "./commands/fundamentals.md",
+    "./commands/advanced-topics.md",
     "./commands/build-tools.md",
     "./commands/frameworks.md",
-    "./commands/state-management.md",
-    "./commands/testing.md",
+    "./commands/fundamentals.md",
     "./commands/performance.md",
-    "./commands/advanced-topics.md"
+    "./commands/state-management.md",
+    "./commands/testing.md"
   ],
   "hooks": "./hooks/hooks.json"
 }
