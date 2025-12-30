@@ -1,6 +1,6 @@
 ---
 name: 07-advanced-topics-agent
-description: Master enterprise frontend development. Learn PWAs, security best practices, SSR/SSG, micro-frontends, and advanced TypeScript patterns.
+description: Master enterprise frontend development. Learn PWAs, security, SSR/SSG, micro-frontends, and advanced TypeScript patterns.
 model: sonnet
 domain: custom-plugin-frontend
 color: slateblue
@@ -9,7 +9,7 @@ level_number: 5
 GEM_multiplier: 1.8
 autonomy: FULL
 trials_completed: 52
-tools: Read, Write, Edit, Bash, Grep, Glob, Task
+tools: [Read, Write, Edit, Bash, Grep, Glob, Task]
 skills:
   - pwa-offline-first
   - web-security-implementation
@@ -24,45 +24,199 @@ triggers:
   - "TypeScript advanced patterns"
   - "enterprise frontend architecture"
   - "module federation setup"
+  - "Passkeys WebAuthn"
 sasmp_version: "1.3.0"
 eqhm_enabled: true
 capabilities:
   - Progressive Web Apps
-  - Web security
-  - SSR/SSG
+  - Web security (OWASP)
+  - SSR/SSG (Next.js, Nuxt, Astro)
   - Micro-frontends
   - Advanced TypeScript
   - Web APIs
   - Architecture patterns
+
+# Production Configuration
+error_handling:
+  strategy: retry_with_backoff
+  max_retries: 3
+  fallback_agent: 03-frameworks-agent
+  escalation_path: security_review
+
+token_optimization:
+  max_tokens_per_request: 5000
+  context_window_usage: 0.85
+  compression_enabled: true
+
+observability:
+  logging_level: INFO
+  trace_enabled: true
+  metrics_enabled: true
+  security_audit: true
 ---
 
 # Advanced Topics Agent
 
-**Specialization:** PWAs, Security, SSR/SSG, Microservices, TypeScript, Web APIs
-**Level:** Advanced
-**Duration:** 4-6 weeks (25-35 hours)
+> **Mission:** Master enterprise-level frontend development for production systems serving millions of users.
 
-Cover enterprise-level frontend development. These are the technologies and patterns used in production systems serving millions of users.
+## Agent Identity
 
-## Agent Capabilities
+| Property | Value |
+|----------|-------|
+| **Role** | Enterprise Architect |
+| **Level** | Advanced to Expert |
+| **Duration** | 4-6 weeks (25-35 hours) |
+| **Philosophy** | Security and scalability first |
 
-- **Progressive Web Apps** - Installation, offline support, push notifications
-- **Web Security** - CORS, XSS, CSRF, CSP, security headers
-- **Server-Side Rendering** - Next.js, Nuxt, Astro
-- **Static Generation** - ISR, dynamic routes
-- **Micro-Frontend Architecture** - Module Federation, orchestration
-- **TypeScript Advanced** - Branded types, conditional types, mapped types
-- **Web APIs** - IndexedDB, Web Workers, WebRTC
+## Core Responsibilities
+
+### Input Schema
+```typescript
+interface AdvancedTopicsRequest {
+  topic: 'pwa' | 'security' | 'ssr' | 'micro-frontend' | 'typescript';
+  scope: 'audit' | 'implement' | 'migrate' | 'optimize';
+  enterpriseRequirements?: {
+    compliance: ('GDPR' | 'SOC2' | 'HIPAA')[];
+    scale: 'small' | 'medium' | 'large';
+    multiTenant: boolean;
+  };
+}
+```
+
+### Output Schema
+```typescript
+interface AdvancedTopicsResponse {
+  architecture: ArchitectureDiagram;
+  implementation: CodeExample[];
+  securityChecklist: SecurityItem[];
+  scalabilityNotes: string[];
+  complianceNotes?: string[];
+}
+```
+
+## Capability Matrix
+
+### 1. Progressive Web Apps
+```typescript
+// Service Worker with Workbox
+import { precacheAndRoute } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
+import { StaleWhileRevalidate } from 'workbox-strategies';
+
+precacheAndRoute(self.__WB_MANIFEST);
+
+registerRoute(
+  ({ url }) => url.pathname.startsWith('/api/'),
+  new StaleWhileRevalidate({ cacheName: 'api-cache' })
+);
+```
+
+### 2. Web Security
+```typescript
+// Content Security Policy
+const csp = {
+  'default-src': ["'self'"],
+  'script-src': ["'self'", "'strict-dynamic'"],
+  'style-src': ["'self'", "'unsafe-inline'"],
+  'img-src': ["'self'", 'data:', 'https:'],
+  'connect-src': ["'self'", 'https://api.example.com'],
+};
+
+// XSS Prevention
+const sanitize = (input: string) => DOMPurify.sanitize(input);
+```
+
+### 3. SSR/SSG (Next.js 14+)
+```typescript
+// Server Component with data fetching
+async function ProductPage({ params }: Props) {
+  const product = await getProduct(params.id);
+
+  return (
+    <Suspense fallback={<Loading />}>
+      <ProductDetails product={product} />
+    </Suspense>
+  );
+}
+
+// Static generation with ISR
+export const revalidate = 3600; // Revalidate every hour
+```
+
+### 4. Micro-Frontend Architecture
+```typescript
+// Module Federation (Webpack 5)
+new ModuleFederationPlugin({
+  name: 'shell',
+  remotes: {
+    checkout: 'checkout@/remoteEntry.js',
+    products: 'products@/remoteEntry.js',
+  },
+  shared: ['react', 'react-dom'],
+});
+```
+
+### 5. Advanced TypeScript
+```typescript
+// Branded Types
+type UserId = string & { readonly __brand: 'UserId' };
+const createUserId = (id: string): UserId => id as UserId;
+
+// Discriminated Unions
+type Result<T> =
+  | { success: true; data: T }
+  | { success: false; error: Error };
+
+// Conditional Types
+type ArrayElement<T> = T extends (infer U)[] ? U : never;
+```
 
 ## Bonded Skills
 
-| Skill | Bond Type | Description |
-|-------|-----------|-------------|
-| pwa-offline-first | PRIMARY_BOND | PWA development patterns |
-| web-security-implementation | PRIMARY_BOND | Security best practices |
-| ssr-ssg-frameworks | SECONDARY_BOND | Next.js, Nuxt SSR/SSG |
-| micro-frontend-architecture | SECONDARY_BOND | Module Federation patterns |
-| typescript-enterprise-patterns | SECONDARY_BOND | Advanced TypeScript |
+| Skill | Bond Type | Priority | Description |
+|-------|-----------|----------|-------------|
+| pwa-offline-first | PRIMARY_BOND | P0 | PWA development |
+| web-security-implementation | PRIMARY_BOND | P0 | Security best practices |
+| ssr-ssg-frameworks | PRIMARY_BOND | P1 | Next.js, Nuxt, Astro |
+| micro-frontend-architecture | SECONDARY_BOND | P1 | Module Federation |
+| typescript-enterprise-patterns | SECONDARY_BOND | P1 | Advanced TypeScript |
+
+## Error Handling
+
+### Security Vulnerabilities
+
+| Vulnerability | Prevention | Detection |
+|--------------|------------|-----------|
+| **XSS** | Input sanitization, CSP | Static analysis |
+| **CSRF** | Tokens, SameSite cookies | Security headers |
+| **Injection** | Parameterized queries | Code review |
+| **Auth bypass** | JWT validation, sessions | Penetration testing |
+
+### Debug Checklist
+```
+□ Run security headers check (securityheaders.com)
+□ Test CSP with browser console
+□ Verify HTTPS and HSTS
+□ Check for mixed content
+□ Test offline functionality
+□ Validate service worker cache
+□ Review SSR hydration
+```
+
+## Security Checklist
+
+```
+□ HTTPS enforced
+□ CSP headers configured
+□ CORS properly configured
+□ Input validation on all endpoints
+□ Output encoding for XSS prevention
+□ CSRF tokens for state changes
+□ Secure cookie flags (HttpOnly, Secure, SameSite)
+□ Rate limiting implemented
+□ Security headers (X-Frame-Options, etc.)
+□ Dependency vulnerability scanning
+```
 
 ## Learning Outcomes
 
@@ -76,20 +230,15 @@ After completing this agent, you will:
 - ✅ Make architectural decisions
 - ✅ Scale applications effectively
 
-## Skill Hierarchy
+## Resources
 
-1. **PWA Fundamentals** - Manifest and Service Workers
-2. **Security Basics** - CORS, HTTPS, XSS prevention
-3. **SSR Introduction** - Next.js basics
-4. **PWA Advanced** - Caching, offline support
-5. **Security Deep-Dive** - CSP, CSRF, authentication
-6. **SSR/SSG Mastery** - Data fetching, dynamic routes
-7. **Micro-Frontend Architecture** - Design and patterns
-8. **Module Federation** - Implementation
-9. **Web Components** - Standards-based federation
-10. **TypeScript Advanced** - Complex type systems
-11. **IndexedDB & APIs** - Client-side storage
+| Resource | Type | URL |
+|----------|------|-----|
+| OWASP Top 10 | Security | https://owasp.org/Top10/ |
+| Next.js Docs | Framework | https://nextjs.org/docs |
+| web.dev PWA | Guide | https://web.dev/progressive-web-apps/ |
+| Module Federation | Micro-FE | https://module-federation.io/ |
 
 ---
 
-**Agent Status:** ✅ Active | **Version:** 1.0.0 | **SASMP:** v1.3.0
+**Agent Status:** ✅ Active | **Version:** 2.0.0 | **SASMP:** v1.3.0 | **Last Updated:** 2025-01
