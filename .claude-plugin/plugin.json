@@ -1,7 +1,7 @@
 {
   "name": "frontend-development-assistant",
-  "version": "2.0.2",
-  "description": "Professional frontend development plugin with 7 agents and 41 skills covering HTML/CSS, JavaScript, React, Vue, Angular, Svelte, TypeScript, testing, performance, state management, PWA, SSR/SSG, and web security",
+  "version": "2.1.0",
+  "description": "Production-grade frontend development plugin with 8 agents and 41 skills covering HTML/CSS, JavaScript, React, Vue, Angular, Svelte, TypeScript, testing, performance, state management, PWA, SSR/SSG, DevOps, and web security",
   "author": {
     "name": "Dr. Umit Kacar & Muhsin Elcicek",
     "email": "kacarumit.phd@gmail.com",
@@ -28,13 +28,14 @@
     "plugin"
   ],
   "agents": [
-    "./agents/advanced-topics.md",
-    "./agents/frameworks.md",
-    "./agents/frontend-build-tools.md",
     "./agents/frontend-fundamentals.md",
-    "./agents/performance.md",
+    "./agents/frontend-build-tools.md",
+    "./agents/frameworks.md",
     "./agents/state-management.md",
-    "./agents/testing.md"
+    "./agents/testing.md",
+    "./agents/performance.md",
+    "./agents/advanced-topics.md",
+    "./agents/08-frontend-devops.md"
   ],
   "skills": [
     "./skills/angular-dependency-injection/SKILL.md",
