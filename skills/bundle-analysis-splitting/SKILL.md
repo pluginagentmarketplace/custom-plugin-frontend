@@ -3,7 +3,7 @@ name: bundle-analysis-splitting
 description: Analyze and optimize bundle sizes through code splitting, lazy loading, and dependency management.
 version: "2.0.0"
 sasmp_version: "1.3.0"
-bonded_agent: 02-build-tools-agent
+bonded_agent: frontend-build-tools
 bond_type: SECONDARY_BOND
 status: production
 category: build-optimization

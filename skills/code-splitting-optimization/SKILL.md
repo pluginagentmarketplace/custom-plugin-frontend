@@ -2,7 +2,7 @@
 name: code-splitting-optimization
 description: Advanced code splitting optimization strategies for maximum performance in large-scale frontend applications.
 sasmp_version: "1.3.0"
-bonded_agent: 06-performance-agent
+bonded_agent: performance
 bond_type: SECONDARY_BOND
 
 # Production Configuration

@@ -2,7 +2,7 @@
 name: react-fundamentals
 description: Master React fundamentals - components, JSX, state, props, and hooks for building modern user interfaces.
 sasmp_version: "1.3.0"
-bonded_agent: 03-frameworks-agent
+bonded_agent: frameworks
 bond_type: PRIMARY_BOND
 
 # Production Configuration

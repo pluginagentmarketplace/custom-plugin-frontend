@@ -2,7 +2,7 @@
 name: html-css-essentials
 description: Master HTML5 semantic markup and CSS layouts (Flexbox, Grid) for responsive, accessible web development.
 sasmp_version: "1.3.0"
-bonded_agent: 01-fundamentals-agent
+bonded_agent: frontend-fundamentals
 bond_type: PRIMARY_BOND
 
 # Production Configuration

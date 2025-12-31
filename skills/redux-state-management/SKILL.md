@@ -3,7 +3,7 @@ name: redux-state-management
 description: Master Redux for predictable state management with actions, reducers, middleware, and Redux Toolkit.
 sasmp_version: "1.3.0"
 version: "2.0.0"
-bonded_agent: 04-state-management-agent
+bonded_agent: state-management
 bond_type: PRIMARY_BOND
 production_config:
   performance_budget:

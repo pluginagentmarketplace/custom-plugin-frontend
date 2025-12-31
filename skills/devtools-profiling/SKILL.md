@@ -3,7 +3,7 @@ name: devtools-profiling
 description: Master browser DevTools for performance profiling, memory debugging, and network analysis.
 version: "2.0.0"
 sasmp_version: "1.3.0"
-bonded_agent: 06-performance-agent
+bonded_agent: performance
 bond_type: SECONDARY_BOND
 status: production
 category: development-tools

@@ -3,7 +3,7 @@ name: context-api-patterns
 description: Master React Context API patterns for state management including Provider patterns, useReducer, custom hooks, and avoiding common pitfalls.
 sasmp_version: "1.3.0"
 version: "2.0.0"
-bonded_agent: 04-state-management-agent
+bonded_agent: state-management
 bond_type: PRIMARY_BOND
 production_config:
   performance_budget:

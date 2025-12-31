@@ -2,7 +2,7 @@
 name: vue-composition-api
 description: Master Vue 3 Composition API - reactive state, composables, and modern patterns.
 sasmp_version: "1.3.0"
-bonded_agent: 03-frameworks-agent
+bonded_agent: frameworks
 bond_type: PRIMARY_BOND
 
 # Production Configuration

@@ -2,7 +2,7 @@
 name: svelte-reactivity-stores
 description: Master Svelte's compile-time reactivity, stores, and Svelte 5 runes.
 sasmp_version: "1.3.0"
-bonded_agent: 03-frameworks-agent
+bonded_agent: frameworks
 bond_type: SECONDARY_BOND
 
 # Production Configuration

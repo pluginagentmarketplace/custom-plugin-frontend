@@ -2,7 +2,7 @@
 name: dom-manipulation
 description: Master DOM selection, manipulation, event handling, and dynamic content creation.
 sasmp_version: "1.3.0"
-bonded_agent: 01-fundamentals-agent
+bonded_agent: frontend-fundamentals
 bond_type: SECONDARY_BOND
 
 # Production Configuration

@@ -3,7 +3,7 @@ name: architectural-patterns
 description: Master architectural patterns - MVC, MVVM, Clean Architecture, SOLID principles, domain-driven design.
 sasmp_version: "1.3.0"
 version: "2.0.0"
-bonded_agent: 07-advanced-topics-agent
+bonded_agent: advanced-topics
 bond_type: PRIMARY_BOND
 production_config:
   performance_budget:

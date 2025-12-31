@@ -2,7 +2,7 @@
 name: zustand-minimalist
 description: Master Zustand for lightweight, scalable state management with minimal boilerplate.
 sasmp_version: "1.3.0"
-bonded_agent: 04-state-management-agent
+bonded_agent: state-management
 bond_type: PRIMARY_BOND
 
 # Production Configuration

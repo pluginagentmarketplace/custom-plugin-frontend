@@ -2,7 +2,7 @@
 name: npm-yarn-pnpm
 description: Master NPM, Yarn, and PNPM package managers. Learn dependency management, versioning, and monorepo setup.
 sasmp_version: "1.3.0"
-bonded_agent: 02-build-tools-agent
+bonded_agent: frontend-build-tools
 bond_type: PRIMARY_BOND
 
 # Production Configuration

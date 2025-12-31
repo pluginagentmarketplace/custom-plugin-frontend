@@ -2,7 +2,7 @@
 name: typescript-enterprise-patterns
 description: Master advanced TypeScript patterns for enterprise-grade type safety.
 sasmp_version: "1.3.0"
-bonded_agent: 07-advanced-topics-agent
+bonded_agent: advanced-topics
 bond_type: PRIMARY_BOND
 
 # Production Configuration

@@ -2,7 +2,7 @@
 name: internet-basics
 description: Understand how the internet works - TCP/IP, HTTP/HTTPS, DNS, browsers, and web architecture.
 sasmp_version: "1.3.0"
-bonded_agent: 01-fundamentals-agent
+bonded_agent: frontend-fundamentals
 bond_type: SECONDARY_BOND
 
 # Production Configuration

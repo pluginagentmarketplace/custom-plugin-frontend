@@ -2,7 +2,7 @@
 name: react-hooks-patterns
 description: Master React Hooks and advanced patterns for building performant functional components.
 sasmp_version: "1.3.0"
-bonded_agent: 03-frameworks-agent
+bonded_agent: frameworks
 bond_type: PRIMARY_BOND
 
 # Production Configuration

@@ -2,7 +2,7 @@
 name: javascript-fundamentals
 description: Master JavaScript ES6+ fundamentals - variables, functions, async programming, and modern syntax.
 sasmp_version: "1.3.0"
-bonded_agent: 01-fundamentals-agent
+bonded_agent: frontend-fundamentals
 bond_type: PRIMARY_BOND
 
 # Production Configuration

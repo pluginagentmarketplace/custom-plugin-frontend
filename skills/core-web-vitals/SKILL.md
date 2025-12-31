@@ -3,7 +3,7 @@ name: core-web-vitals
 description: Master Core Web Vitals optimization - LCP, FID/INP, and CLS measurement and improvement strategies.
 version: "2.0.0"
 sasmp_version: "1.3.0"
-bonded_agent: 06-performance-agent
+bonded_agent: performance
 bond_type: PRIMARY_BOND
 status: production
 category: performance

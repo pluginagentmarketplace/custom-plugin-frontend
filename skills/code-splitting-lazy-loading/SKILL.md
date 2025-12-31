@@ -2,7 +2,7 @@
 name: code-splitting-lazy-loading
 description: Master code splitting and lazy loading techniques for optimal frontend performance and faster initial load times.
 sasmp_version: "1.3.0"
-bonded_agent: 06-performance-agent
+bonded_agent: performance
 bond_type: PRIMARY_BOND
 
 # Production Configuration

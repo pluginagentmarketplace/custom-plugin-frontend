@@ -3,7 +3,7 @@ name: context-api-hooks
 description: Master React Context API and custom hooks for state management without Redux.
 sasmp_version: "1.3.0"
 version: "2.0.0"
-bonded_agent: 04-state-management-agent
+bonded_agent: state-management
 bond_type: SECONDARY_BOND
 production_config:
   performance_budget:
