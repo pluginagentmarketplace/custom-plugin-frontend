@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.3] - 2026-01-05
+
+### Fixed
+- **CRITICAL**: Fixed `/plugin add marketplace` → `/plugin marketplace add` command syntax
+  - Previous documentation had incorrect command order
+  - Now follows official Claude Code CLI syntax
+- Added comprehensive Troubleshooting section to README
+
+### Added
+- **E308 Error Documentation** - "Duplicate hooks file detected" troubleshooting guide
+  - Root cause explanation (Claude Code v2.0.27+ auto-discovery)
+  - Step-by-step fix instructions
+  - Prevention guidelines
+- **Plugin not loading** troubleshooting
+- **Agents not appearing** troubleshooting
+
+### Documentation
+- README.md version updated to 2.0.3
+- Last updated date: 2026-01-05
+
+---
+
 ## [2.0.2] - 2025-12-28
 
 ### Changed
@@ -120,6 +142,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 2.0.3 | 2026-01-05 | Fix plugin command syntax + E308 troubleshooting |
+| 2.0.2 | 2025-12-28 | README template v2.1.0 compliance |
 | 2.0.0 | 2025-12-28 | SASMP v1.3.0 + Template v2.1.0 compliance |
 | 1.0.0 | 2025-01-01 | Initial release |
 
@@ -149,4 +173,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-*Last Updated: 2025-12-28*
+*Last Updated: 2026-01-05*

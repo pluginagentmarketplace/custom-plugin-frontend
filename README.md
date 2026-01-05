@@ -6,7 +6,7 @@
 <br/>
 
 <!-- Badge Row 1: Status Badges -->
-[![Version](https://img.shields.io/badge/Version-2.0.2-blue?style=for-the-badge)](https://github.com/pluginagentmarketplace/custom-plugin-frontend/releases)
+[![Version](https://img.shields.io/badge/Version-2.0.3-blue?style=for-the-badge)](https://github.com/pluginagentmarketplace/custom-plugin-frontend/releases)
 [![License](https://img.shields.io/badge/License-Custom-yellow?style=for-the-badge)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production-brightgreen?style=for-the-badge)](#)
 [![SASMP](https://img.shields.io/badge/SASMP-v1.3.0-blueviolet?style=for-the-badge)](#)
@@ -63,7 +63,7 @@
 
 ```bash
 # Step 1️⃣ Add the marketplace
-/plugin add marketplace pluginagentmarketplace/custom-plugin-frontend
+/plugin marketplace add pluginagentmarketplace/custom-plugin-frontend
 
 # Step 2️⃣ Install the plugin
 /plugin install frontend-development-assistant@pluginagentmarketplace-frontend
@@ -203,8 +203,8 @@ custom-plugin-frontend/
 
 | Field | Value |
 |-------|-------|
-| **Version** | 2.0.2 |
-| **Last Updated** | 2025-12-29 |
+| **Version** | 2.0.3 |
+| **Last Updated** | 2026-01-05 |
 | **Status** | Production Ready |
 | **SASMP** | v1.3.0 |
 | **Agents** | 8 |
@@ -232,6 +232,61 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 > - ✅ Check dependencies for known vulnerabilities
 > - ✅ Follow security best practices
 > - ✅ Report security issues privately via [Issues](../../issues)
+
+---
+
+## 🔧 Troubleshooting
+
+<details>
+<summary><strong>E308: Duplicate hooks file detected</strong></summary>
+
+**Error Message:**
+```
+Duplicate hooks file detected: ./hooks/hooks.json resolves to already-loaded file.
+The standard hooks/hooks.json is loaded automatically, so manifest.hooks
+should only reference additional hook files.
+```
+
+**Cause:** Claude Code v2.0.27+ auto-discovers `hooks/hooks.json` from the standard location. If `plugin.json` also has `"hooks": "./hooks/hooks.json"`, it creates a duplicate loading error.
+
+**Fix:**
+```bash
+# 1. Navigate to plugin cache
+cd ~/.claude/plugins/cache/pluginagentmarketplace-frontend/frontend-development-assistant/VERSION/
+
+# 2. Edit plugin.json and REMOVE the "hooks" line
+# Remove: "hooks": "./hooks/hooks.json"
+
+# 3. Restart Claude Code
+exit
+claude
+```
+
+**Prevention:** Standard `hooks/hooks.json` location is auto-discovered. Only use `"hooks"` field in `plugin.json` for ADDITIONAL hook files, not the standard location.
+
+</details>
+
+<details>
+<summary><strong>Plugin not loading after installation</strong></summary>
+
+**Solutions:**
+1. Restart Claude Code completely (close and reopen terminal)
+2. Verify installation: `/plugin list`
+3. Check settings.json has the plugin enabled
+4. Clear cache: `rm -rf ~/.claude/plugins/cache/pluginagentmarketplace-frontend/`
+
+</details>
+
+<details>
+<summary><strong>Agents not appearing</strong></summary>
+
+**Solutions:**
+1. Verify plugin is installed: `/plugin list`
+2. Check for errors in plugin loading
+3. Restart Claude Code after any plugin changes
+4. Ensure Claude Code version is 2.0.27+
+
+</details>
 
 ---
 
