@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CRITICAL**: Fixed `/plugin add marketplace` → `/plugin marketplace add` command syntax
   - Previous documentation had incorrect command order
   - Now follows official Claude Code CLI syntax
+- **E308 FIX**: Removed `"hooks": "./hooks/hooks.json"` from plugin.json
+  - Claude Code v2.0.27+ auto-discovers hooks/hooks.json from standard location
+  - Explicit reference caused "Duplicate hooks file detected" error
+  - hooks/hooks.json still exists and will be auto-loaded
 - Added comprehensive Troubleshooting section to README
 
 ### Added

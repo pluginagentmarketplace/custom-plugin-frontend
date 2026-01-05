@@ -88,6 +88,5 @@
     "./commands/performance.md",
     "./commands/state-management.md",
     "./commands/testing.md"
-  ],
-  "hooks": "./hooks/hooks.json"
+  ]
 }
